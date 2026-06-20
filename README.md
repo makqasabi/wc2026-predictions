@@ -22,7 +22,7 @@ Knockout matchups are seeded by each person's own group predictions, so they dif
 
 ## Entrants
 
-Abdulrahman Othman Tariq · Ahmed Esam · Bader · Mohsen · Naser · Othman Tariq · Tamim · Thamer
+Abdulrahman Othman Tariq · Ahmed Esam · Bader · Mohammad Saad · Mohsen · Naser · Othman Tariq · Salman Othman Tariq · Tamim · Tariq Othman Tariq · Thamer
 
 ## Hosting
 
