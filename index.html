@@ -55,6 +55,7 @@
   .chip.full{background:var(--green-soft);color:#14532d}
   .chip.group{background:var(--orange-soft);color:#92400e}
   .chip.live{background:#dbeafe;color:#1e40af}
+  .chip.joiner{background:#ede9fe;color:#5b21b6}
   .flag{width:20px;height:14px;border-radius:2px;object-fit:cover;box-shadow:0 0 0 1px rgba(0,0,0,.08);flex:0 0 auto;background:#eee;vertical-align:middle}
   .grp-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 10px;gap:8px}
   .grp-head .gname{font-weight:800;font-size:15px}
@@ -125,10 +126,16 @@
   .pick:last-child{border-bottom:none}
   .pick .dt{width:42px;flex:0 0 auto}
   .pick .opts{flex:1;display:flex;gap:6px}
-  .pick .opt-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 6px;font-size:12.5px;font-weight:700;cursor:pointer;min-width:0}
+  .pick .opt-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 8px;font-size:13.5px;font-weight:700;cursor:pointer;min-width:0;transition:transform .08s ease}
+  .pick .opt-btn:active{transform:scale(.97)}
   .pick .opt-btn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pick .opt-btn.sel{background:var(--green);border-color:var(--green);color:#fff}
+  .pick .opt-btn.sel{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 4px 12px -2px rgba(22,163,74,.35)}
   .chip.guest{background:#ede9fe;color:#5b21b6}
+  table.cmp tbody tr:nth-child(even of :not(.actualrow)) td:not(.who){background:#fafbfa}
+  .champ-celebrate{background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fde68a;border-radius:14px;padding:18px;text-align:center;margin-bottom:14px}
+  .champ-celebrate .lbl{font-size:11px;font-weight:700;letter-spacing:.12em;color:#92400e;text-transform:uppercase}
+  .champ-celebrate .team{font-size:24px;font-weight:800;margin-top:6px;display:inline-flex;align-items:center;gap:8px}
+  .empty-state{text-align:center;color:var(--muted);font-size:13px;padding:24px 12px}
 </style>
 </head>
 <body>
@@ -149,12 +156,12 @@
 </div>
 
 <nav id="nav">
-  <button data-tab="leaderboard" class="active">🏅 Leaderboard</button>
-  <button data-tab="matches">⚽ Match Picks</button>
-  <button data-tab="groups">📊 Group Tables</button>
+  <button data-tab="leaderboard" class="active">🏆 Standings</button>
+  <button data-tab="matches">⚽ Matches</button>
+  <button data-tab="groups">📊 Groups</button>
   <button data-tab="champions">👑 Knockouts</button>
-  <button data-tab="join">➕ Join / Predict</button>
-  <button data-tab="actuals">✏️ Results</button>
+  <button data-tab="join">➕ Submit</button>
+  <button data-tab="actuals" id="navActuals" style="display:none">✏️ Results</button>
 </nav>
 
 <main>
@@ -168,11 +175,6 @@
       <h2>🎯 Accuracy <span class="mini">· % of decided picks correct</span></h2>
       <p class="sub" id="accSub"></p>
       <div id="accBoard"></div>
-    </div>
-    <div class="card" id="joinersCard" style="display:none">
-      <h2>🙋 Joiners <span class="mini">· by accuracy %</span></h2>
-      <p class="sub" id="joinersSub"></p>
-      <div id="joinersBoard"></div>
     </div>
     <div class="card">
       <h2>How scoring works</h2>
@@ -211,21 +213,20 @@
 
   <section class="panel" id="panel-join">
     <div class="card">
-      <h2 id="joinTitle">Join &amp; predict</h2>
-      <p class="sub">Predict the whole way to the trophy: ① pick the winners of the remaining group games → ② your group tables decide who advances → ③ pick the knockout winners round by round → the final gives your champion.</p>
-      <input id="joinName" placeholder="Your name" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px;margin-bottom:6px">
-      <div id="joinNameWarn" class="mini" style="color:var(--red);display:none">Enter your name first.</div>
+      <h2 id="joinTitle">Predict</h2>
+      <input id="joinName" placeholder="Your name" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px">
+      <div id="joinNameWarn" class="mini" style="color:var(--red);display:none;margin-top:4px">Enter your name first.</div>
     </div>
 
-    <h2 style="font-size:16px;margin:4px 2px 8px">① Group stage <span class="mini" id="grpProgress"></span></h2>
+    <h2 style="font-size:15px;margin:4px 4px 8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Group stage <span class="mini" id="grpProgress"></span></h2>
     <div id="joinGames"></div>
 
-    <h2 style="font-size:16px;margin:14px 2px 8px">② → ③ Knockouts</h2>
+    <h2 style="font-size:15px;margin:14px 4px 8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Knockouts</h2>
     <div id="joinKO"></div>
 
-    <div class="card" id="champBanner" style="display:none;text-align:center">
-      <div class="mini">YOUR PREDICTED CHAMPION</div>
-      <div id="champDisplay" style="font-size:20px;font-weight:800;margin-top:6px"></div>
+    <div class="champ-celebrate" id="champBanner" style="display:none">
+      <div class="lbl">🏆 Your predicted champion</div>
+      <div class="team" id="champDisplay"></div>
     </div>
 
     <div class="btn-row"><button class="btn primary" id="joinSubmitBtn">Submit</button></div>
@@ -468,7 +469,7 @@ function renderLeaderboard(){
     const extra=[s.posPts?`+${s.posPts} table`:'',s.champ?'+25 champ':''].filter(Boolean).join(' · ');
     const row=el(`<div class="lb-row" data-name="${r.p.name}">
       <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
-      <div class="lb-name">${r.p.name}${r.p.guest?' <span class="chip guest">guest</span>':''}
+      <div class="lb-name">${r.p.name}${r.p.guest?' <span class="chip joiner">joiner</span>':''}
         <small>${s.correct}/${s.decided} match picks${extra?' · '+extra:''}</small>
         <div class="bar"><i style="width:${Math.round(s.total/max*100)}%"></i></div>
       </div>
@@ -517,7 +518,7 @@ function renderMatches(){
     });
     h+=`</tr>`;
     ENT().forEach(p=>{
-      h+=`<tr><td class="who">${p.name}${p.guest?' <span class="chip guest">guest</span>':''}</td>`;
+      h+=`<tr><td class="who">${p.name}${p.guest?' <span class="chip joiner">joiner</span>':''}</td>`;
       fxs.forEach((fx,i)=>{
         const pw=entryPick(p,g,i,fx[0],fx[1]);
         if(pw===null){h+=`<td class="mini">—</td>`;}
@@ -557,18 +558,26 @@ function renderChampions(){
   ENT().forEach(p=>{
     let cls='none',mark='';
     if(p.champion){if(CHAMPION){cls=p.champion===CHAMPION?'correct':'wrong';mark=p.champion===CHAMPION?' ✓':' ✗';}else cls='';}
-    wrap.appendChild(el(`<div class="champ-row"><div class="who">${p.name}${p.guest?' <span class="chip guest">guest</span>':''}</div>
+    wrap.appendChild(el(`<div class="champ-row"><div class="who">${p.name}${p.guest?' <span class="chip joiner">joiner</span>':''}</div>
       <div class="champ-pick ${cls}">${p.champion?flag(p.champion)+' '+p.champion+mark:'no pick'}</div></div>`));
   });
   const bw=document.getElementById('brackets');bw.innerHTML='';
   ENT().forEach(p=>{
     const d=el(`<details class="box" data-name="${p.name}"></details>`);
-    const tag=p.guest?'<span class="chip guest">guest</span>':`<span class="chip ${p.knockoutCompleted?'full':'group'}">${p.knockoutCompleted?'Full bracket':'Group only'}</span>`;
+    const tag=p.guest?'<span class="chip joiner">joiner</span>':`<span class="chip ${p.knockoutCompleted?'full':'group'}">${p.knockoutCompleted?'Full bracket':'Group only'}</span>`;
     let inner=`<summary>${p.name}${tag}<span class="caret">▸</span></summary><div class="boxbody">`;
     if(p.r32&&p.r32.length){
       inner+=`<div class="mini" style="margin:4px 0 6px">ROUND OF 32 — winners picked</div>`;
       p.r32.forEach(m=>{inner+=`<div class="match"><span class="dt">M${m[0]}</span><span class="pair">${m[1]} v ${m[2]}</span><span class="sc">${m[3]?ABBR[m[3]]:'—'}</span></div>`;});
-    }else inner+=`<div class="mini" style="padding:6px 0">${p.guest?'Guest — predicted upcoming match winners + champion.':'Knockout bracket not filled in — group stage only.'}</div>`;
+    }else if(p.guest&&p.ko&&Object.keys(p.ko).length){
+      const rounds=[["Round of 32",[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]],["Round of 16",[89,90,91,92,93,94,95,96]],["Quarter-finals",[97,98,99,100]],["Semi-finals",[101,102]]];
+      rounds.forEach(([title,nums])=>{
+        const picks=nums.filter(n=>p.ko[n]);
+        if(!picks.length)return;
+        inner+=`<div class="mini" style="margin:6px 0 4px">${title.toUpperCase()}</div>`;
+        picks.forEach(n=>{inner+=`<div class="match"><span class="dt">M${n}</span><span class="pair">${p.ko[n]}</span><span class="sc">✓</span></div>`;});
+      });
+    }else inner+=`<div class="mini" style="padding:6px 0">Knockout bracket not filled in — group stage only.</div>`;
     if(p.champion)inner+=`<div class="match"><span class="dt">🏆</span><span class="pair">Champion</span><span class="sc">${flag(p.champion)} ${p.champion}</span></div>`;
     inner+=`</div>`;d.innerHTML=inner;bw.appendChild(d);
   });
@@ -694,14 +703,17 @@ document.getElementById('joinSubmitBtn').addEventListener('click',async ev=>{
   if(!g.name){document.getElementById('joinNameWarn').style.display='block';return;}
   document.getElementById('joinNameWarn').style.display='none';
   upsertGuesser(g);renderAll();
-  const btn=ev.currentTarget;btn.disabled=true;const orig=btn.textContent;btn.textContent='Submitting…';
+  const btn=ev.currentTarget;const orig=btn.textContent;
+  btn.disabled=true;btn.textContent='Submitting…';
   const payload={n:g.name,l:g.league,p:g.picks,k:g.ko,c:g.champion};
   const code=btoa(encodeURIComponent(JSON.stringify(payload)));
   try{
-    await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
+    const r=await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
       body:JSON.stringify({Name:g.name,League:g.league,Champion:g.champion||'(none)',Code:code,_subject:`WC2026 L${g.league} — ${g.name}`,_captcha:'false',_template:'box'})});
+    if(!r.ok)throw new Error('HTTP '+r.status);
     toast('✅ Submitted');switchTab('leaderboard');
-  }catch(e){toast('Network error — try again');btn.disabled=false;btn.textContent=orig;}
+  }catch(e){toast('Network error — try again');}
+  finally{btn.disabled=false;btn.textContent=orig;}
 });
 function importFromHash(){
   if(!location.hash.startsWith('#join='))return;
@@ -717,11 +729,24 @@ function importFromHash(){
 
 function renderAll(){renderStatus();renderLeaderboard();renderMatches();renderGroups();renderChampions();renderEditor();renderJoin();}
 
+function restoreDraft(){
+  if(!ACTIVE)return;
+  if(Object.keys(DRAFT.picks).length||Object.keys(DRAFT.ko).length)return;
+  const mine=loadGuessers().filter(g=>g.league===PARAM);
+  if(mine.length!==1)return; // only auto-restore if there's exactly one local joiner
+  const saved=mine[0];
+  const inp=document.getElementById('joinName');if(inp&&!inp.value)inp.value=saved.name;
+  DRAFT.picks={...(saved.picks||{})};
+  DRAFT.ko={...(saved.ko||{})};
+}
 if(ACTIVE){
   document.title='World Cup 2026 — '+ACTIVE.label;
   importFromHash();
   renderLeague();renderAll();
-  if(new URLSearchParams(location.search).has('guess'))switchTab('join');
+  restoreDraft();renderJoin();
+  const params=new URLSearchParams(location.search);
+  if(params.has('admin'))document.getElementById('navActuals').style.display='';
+  if(params.has('guess'))switchTab('join');
 }else{initChooser();}
 </script>
 </body>
