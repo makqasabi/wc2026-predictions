@@ -17,7 +17,7 @@
   body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     background:linear-gradient(180deg,var(--bg),var(--bg2) 280px,#f4f7f5 280px,#f4f7f5);
     color:var(--ink);line-height:1.45;padding-bottom:80px;}
-  header{text-align:center;color:#fff;padding:26px 16px 18px;padding-top:calc(26px + env(safe-area-inset-top))}
+  header{position:relative;text-align:center;color:#fff;padding:26px 16px 18px;padding-top:calc(26px + env(safe-area-inset-top))}
   .trophy{font-size:42px;line-height:1}
   header h1{margin:8px 0 4px;font-size:22px;font-weight:800;letter-spacing:-.01em}
   header p{margin:0;font-size:13px;opacity:.85}
@@ -130,139 +130,313 @@
   .pick .opt-btn:active{transform:scale(.97)}
   .pick .opt-btn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .pick .opt-btn.sel{background:var(--green);border-color:var(--green);color:#fff;box-shadow:0 4px 12px -2px rgba(22,163,74,.35)}
-  .chip.guest{background:#ede9fe;color:#5b21b6}
   table.cmp tbody tr:nth-child(even of :not(.actualrow)) td:not(.who){background:#fafbfa}
   .champ-celebrate{background:linear-gradient(135deg,#fef3c7,#fde68a);border:1px solid #fde68a;border-radius:14px;padding:18px;text-align:center;margin-bottom:14px}
   .champ-celebrate .lbl{font-size:11px;font-weight:700;letter-spacing:.12em;color:#92400e;text-transform:uppercase}
   .champ-celebrate .team{font-size:24px;font-weight:800;margin-top:6px;display:inline-flex;align-items:center;gap:8px}
   .empty-state{text-align:center;color:var(--muted);font-size:13px;padding:24px 12px}
+  .lang-toggle{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:5px}
+  html[dir="rtl"] .lang-toggle{right:auto;left:14px}
+  html[dir="rtl"]{font-family:"SF Arabic","Geeza Pro","Tahoma",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  html[dir="rtl"] table.cmp th,html[dir="rtl"] table.cmp td{text-align:right}
+  html[dir="rtl"] table.cmp td.who,html[dir="rtl"] table.cmp th.who{left:auto;right:0;box-shadow:-1px 0 0 var(--line)}
+  html[dir="rtl"] .rubric{padding-left:0;padding-right:18px}
+  html[dir="rtl"] details.box>summary .caret{margin-left:0;margin-right:auto}
+  html[dir="rtl"] details.box[open]>summary .caret{transform:rotate(-90deg)}
+  html[dir="rtl"] .chooser .opt{text-align:right}
+  html[dir="rtl"] .lb-score{text-align:left}
 </style>
 </head>
 <body>
 <header>
+  <a class="lang-toggle" id="langToggle" href="#"></a>
   <div class="trophy">🏆</div>
-  <h1>World Cup 2026</h1>
-  <p>Predictions vs Live Actuals</p>
-  <div class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusText">Loading…</span></div>
+  <h1 data-i18n="title">World Cup 2026</h1>
+  <p data-i18n="subtitle">Predictions vs Live Actuals</p>
+  <div class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusText"></span></div>
   <div class="league-label" id="leagueLabel"></div>
 </header>
 
 <div class="chooser" id="chooser">
   <div class="trophy">🏆</div>
-  <h1>World Cup 2026</h1>
-  <p>Choose your league</p>
-  <a class="opt" href="?g=1"><b>🟢 League 1</b><span id="ch1"></span></a>
-  <a class="opt" href="?g=2"><b>🔵 League 2</b><span id="ch2"></span></a>
+  <h1 data-i18n="title">World Cup 2026</h1>
+  <p data-i18n="chooseLeague">Choose your league</p>
+  <a class="opt" href="?g=1" id="opt1"><b>🟢 <span data-i18n="league1">League 1</span></b><span id="ch1"></span></a>
+  <a class="opt" href="?g=2" id="opt2"><b>🔵 <span data-i18n="league2">League 2</span></b><span id="ch2"></span></a>
 </div>
 
 <nav id="nav">
-  <button data-tab="leaderboard" class="active">🏆 Standings</button>
-  <button data-tab="matches">⚽ Matches</button>
-  <button data-tab="groups">📊 Groups</button>
-  <button data-tab="champions">👑 Knockouts</button>
-  <button data-tab="join">➕ Submit</button>
-  <button data-tab="actuals" id="navActuals" style="display:none">✏️ Results</button>
+  <button data-tab="leaderboard" class="active" data-i18n="tabStandings">🏆 Standings</button>
+  <button data-tab="matches" data-i18n="tabMatches">⚽ Matches</button>
+  <button data-tab="groups" data-i18n="tabGroups">📊 Groups</button>
+  <button data-tab="champions" data-i18n="tabKnockouts">👑 Knockouts</button>
+  <button data-tab="join" data-i18n="tabSubmit">➕ Submit</button>
+  <button data-tab="actuals" id="navActuals" style="display:none" data-i18n="tabResults">✏️ Results</button>
 </nav>
 
 <main>
   <section class="panel active" id="panel-leaderboard">
     <div class="card">
-      <h2>🏅 Predictors</h2>
+      <h2 data-i18n="predictorsHeading">🏅 Predictors</h2>
       <p class="sub" id="lbSub"></p>
       <div id="leaderboard"></div>
     </div>
     <div class="card">
-      <h2>🎯 Accuracy <span class="mini">· % of decided picks correct</span></h2>
+      <h2><span data-i18n="accuracyHeading">🎯 Accuracy</span> <span class="mini" data-i18n="accuracySubtitle">· % of decided picks correct</span></h2>
       <p class="sub" id="accSub"></p>
       <div id="accBoard"></div>
     </div>
     <div class="card">
-      <h2>How scoring works</h2>
+      <h2 data-i18n="scoringHeading">How scoring works</h2>
       <ul class="rubric">
-        <li><b>+3</b> per correct <b>match result</b> — each group game, predicted winner vs actual (a draw beats everyone, since rankings imply a winner). <span class="mini">Live now.</span></li>
-        <li><b>+3</b> per team in its <b>exact final group position</b> — locks once a group finishes all 6 games.</li>
-        <li><b>+4</b> per correct <b>best third-place qualifier</b> — once the group stage ends.</li>
-        <li><b>+25</b> for the correct <b>champion</b>.</li>
+        <li data-i18n="scoringMatch"><b>+3</b> per correct match result.</li>
+        <li data-i18n="scoringPosition"><b>+3</b> per team in its exact final group position — locks once a group finishes all 6 games.</li>
+        <li data-i18n="scoringThird"><b>+4</b> per correct best third-place qualifier — once the group stage ends.</li>
+        <li data-i18n="scoringChampion"><b>+25</b> for the correct champion.</li>
       </ul>
-      <p class="sub" style="margin-top:8px">A match pick is derived from each person's group ranking: the higher-ranked team is their predicted winner of that head-to-head. Knockout matchups differ per person, so they're shown for reference under <b>Knockouts</b>.</p>
+      <p class="sub" data-i18n="scoringFooter" style="margin-top:8px">A match pick is derived from each person's group ranking. Knockout matchups differ per person, so they're shown for reference under Knockouts.</p>
     </div>
   </section>
 
   <section class="panel" id="panel-matches">
-    <div class="note">Real group results so far (live). Each cell is a person's predicted winner of that game — <b class="ok">green = correct</b>, red = wrong, grey = not played yet.</div>
+    <div class="note" data-i18n="matchesNote">Real group results so far (live). Each cell is a person's predicted winner of that game — green = correct, red = wrong, grey = not played yet.</div>
     <div id="matches"></div>
   </section>
 
   <section class="panel" id="panel-groups">
-    <div class="note">Live group tables (auto-computed from results) vs each person's predicted finishing order. ✓ = prediction currently matches the live position. Exact-position points lock when a group completes.</div>
+    <div class="note" data-i18n="groupsNote">Live group tables (auto-computed from results) vs each person's predicted finishing order. ✓ = prediction currently matches the live position.</div>
     <div id="groups"></div>
   </section>
 
   <section class="panel" id="panel-champions">
     <div class="card">
-      <h2>Champion picks</h2>
-      <p class="sub">Turns green/red once the actual champion is set.</p>
+      <h2 data-i18n="championPicksHeading">Champion picks</h2>
+      <p class="sub" data-i18n="championPicksSub">Turns green/red once the actual champion is set.</p>
       <div id="champions"></div>
     </div>
     <div class="card">
-      <h2>Full brackets</h2>
-      <p class="sub">Round-of-32 winners each person picked. Some completed the whole bracket; others stopped after the group stage.</p>
+      <h2 data-i18n="fullBracketsHeading">Full brackets</h2>
+      <p class="sub" data-i18n="fullBracketsSub">Round-of-32 winners each person picked.</p>
       <div id="brackets"></div>
     </div>
   </section>
 
   <section class="panel" id="panel-join">
     <div class="card">
-      <h2 id="joinTitle">Predict</h2>
-      <input id="joinName" placeholder="Your name" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px">
-      <div id="joinNameWarn" class="mini" style="color:var(--red);display:none;margin-top:4px">Enter your name first.</div>
+      <h2 id="joinTitle" data-i18n="predict">Predict</h2>
+      <input id="joinName" data-i18n-placeholder="yourName" placeholder="Your name" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px">
+      <div id="joinNameWarn" class="mini" style="color:var(--red);display:none;margin-top:4px" data-i18n="enterNameFirst">Enter your name first.</div>
     </div>
 
-    <h2 style="font-size:15px;margin:4px 4px 8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Group stage <span class="mini" id="grpProgress"></span></h2>
+    <h2 style="font-size:15px;margin:4px 4px 8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em"><span data-i18n="groupStage">Group stage</span> <span class="mini" id="grpProgress"></span></h2>
     <div id="joinGames"></div>
 
-    <h2 style="font-size:15px;margin:14px 4px 8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Knockouts</h2>
+    <h2 data-i18n="knockoutsSection" style="font-size:15px;margin:14px 4px 8px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Knockouts</h2>
     <div id="joinKO"></div>
 
     <div class="champ-celebrate" id="champBanner" style="display:none">
-      <div class="lbl">🏆 Your predicted champion</div>
+      <div class="lbl" data-i18n="yourChampion">🏆 Your predicted champion</div>
       <div class="team" id="champDisplay"></div>
     </div>
 
-    <div class="btn-row"><button class="btn primary" id="joinSubmitBtn">Submit</button></div>
+    <div class="btn-row"><button class="btn primary" id="joinSubmitBtn" data-i18n="submit">Submit</button></div>
   </section>
 
   <section class="panel" id="panel-actuals">
-    <div class="warn">Scores below are the <b>real results</b>, pre-loaded. Edit any score and tap Save to update as more games are played — your edits are stored on this device and override the defaults.</div>
+    <div class="warn" data-i18n="actualsWarn">Scores below are the real results, pre-loaded. Edit any score and tap Save to update as more games are played — your edits are stored on this device and override the defaults.</div>
     <div class="card">
-      <h2>Group game results</h2>
-      <p class="sub">Leave a game blank (both empty) to mark it not played yet.</p>
+      <h2 data-i18n="groupGameResults">Group game results</h2>
+      <p class="sub" data-i18n="leaveBlank">Leave a game blank (both empty) to mark it not played yet.</p>
       <div id="editGames"></div>
     </div>
     <div class="card">
-      <h2>World Cup champion</h2>
-      <select id="editChampion"><option value="">— not decided yet —</option></select>
+      <h2 data-i18n="worldCupChampion">World Cup champion</h2>
+      <select id="editChampion"></select>
     </div>
-    <div class="btn-row"><button class="btn primary" id="saveBtn">💾 Save results</button></div>
-    <div class="btn-row"><button class="btn ghost" id="resetBtn">↺ Reset to official results</button></div>
+    <div class="btn-row"><button class="btn primary" id="saveBtn" data-i18n="saveResults">💾 Save results</button></div>
+    <div class="btn-row"><button class="btn ghost" id="resetBtn" data-i18n="resetOfficial">↺ Reset to official results</button></div>
   </section>
 
   <footer>
-    Live results via Wikipedia · predictions from The Telegraph World Cup 2026 Predictor.<br>
-    Built for the FMVA group · tap a name on the leaderboard for details.
+    <span data-i18n="footerCredits">Live results via Wikipedia · predictions from The Telegraph World Cup 2026 Predictor.</span><br>
+    <span data-i18n="footerBuilt">Built for the FMVA group · tap a name on the leaderboard for details.</span>
   </footer>
 </main>
 <div class="toast" id="toast"></div>
 
 <script>
-/* ===== Reference ===== */
+/* ===== i18n ===== */
+const LANG=(new URLSearchParams(location.search).get('lang')==='ar')?'ar':'en';
+document.documentElement.lang=LANG;
+document.documentElement.dir=LANG==='ar'?'rtl':'ltr';
+
+const T_EN={
+  title:"World Cup 2026", subtitle:"Predictions vs Live Actuals",
+  chooseLeague:"Choose your league", league1:"League 1", league2:"League 2",
+  loading:"Loading…", awaiting:"Awaiting results",
+  live:n=>`Live · ${n}/72 group games played`,
+  champion:t=>`Champion: ${t} 🏆`,
+  switchLeague:"switch league", players:"players",
+  tabStandings:"🏆 Standings", tabMatches:"⚽ Matches", tabGroups:"📊 Groups",
+  tabKnockouts:"👑 Knockouts", tabSubmit:"➕ Submit", tabResults:"✏️ Results",
+  predictorsHeading:"🏅 Predictors", accuracyHeading:"🎯 Accuracy",
+  accuracySubtitle:"· % of decided picks correct",
+  scoringHeading:"How scoring works",
+  scoringMatch:"<b>+3</b> per correct match result.",
+  scoringPosition:"<b>+3</b> per team in its exact final group position — locks once a group finishes all 6 games.",
+  scoringThird:"<b>+4</b> per correct best third-place qualifier — once the group stage ends.",
+  scoringChampion:"<b>+25</b> for the correct champion.",
+  scoringFooter:"A match pick is derived from each person's group ranking. Knockout matchups differ per person, so they're shown for reference under Knockouts.",
+  matchesNote:"Real group results so far (live). Each cell is a person's predicted winner of that game — green = correct, red = wrong, grey = not played yet.",
+  groupsNote:"Live group tables (auto-computed from results) vs each person's predicted finishing order. ✓ = prediction currently matches the live position.",
+  championPicksHeading:"Champion picks",
+  championPicksSub:"Turns green/red once the actual champion is set.",
+  fullBracketsHeading:"Full brackets",
+  fullBracketsSub:"Round-of-32 winners each person picked.",
+  predict:"Predict", yourName:"Your name", enterNameFirst:"Enter your name first.",
+  groupStage:"Group stage", knockoutsSection:"Knockouts",
+  yourChampion:"🏆 Your predicted champion",
+  submit:"Submit", submitting:"Submitting…",
+  submitOk:"✅ Submitted", submitErr:"Network error — try again",
+  actualsWarn:"Scores below are the real results, pre-loaded. Edit any score and tap Save to update as more games are played — your edits are stored on this device and override the defaults.",
+  groupGameResults:"Group game results", leaveBlank:"Leave a game blank (both empty) to mark it not played yet.",
+  worldCupChampion:"World Cup champion", notDecided:"— not decided yet —",
+  saveResults:"💾 Save results", resetOfficial:"↺ Reset to official results",
+  savedToast:"✅ Saved", resetToast:"Reset to official results",
+  confirmReset:"Reset all scores to the official pre-loaded results and clear your edits?",
+  footerCredits:"Live results via Wikipedia · predictions from The Telegraph World Cup 2026 Predictor.",
+  footerBuilt:"Built for the FMVA group · tap a name on the leaderboard for details.",
+  noResultsYet:"No results yet.",
+  liveRanked:n=>`Live — ${n}/72 group games played. Ranked by total points.`,
+  matchPicksLabel:(c,d)=>`${c}/${d} match picks`,
+  correctLabel:(c,d)=>`${c}/${d} correct`,
+  tablePts:p=>`+${p} table`,
+  champPts:"+25 champ",
+  pts:"pts", acc:"acc", playedSuffix:"played",
+  played:n=>`${n}/6 played`,
+  final:"Final", liveTable:"Live table", finalTable:"Final table",
+  livePos:"Live", finalPos:"Final",
+  resultRow:"✅ Result",
+  pos1:"1st", pos2:"2nd", pos3:"3rd", pos4:"4th",
+  draw:"draw", winSuffix:" win",
+  gameLabel:"Game",
+  noPick:"no pick", groupOnly:"Group only", fullBracket:"Full bracket",
+  joiner:"joiner", joinerLabel:"joiner",
+  bracketNotFilled:"Knockout bracket not filled in — group stage only.",
+  groupCompleteEmpty:"All group matches have been played — group standings are final. Pick the knockouts below.",
+  finishGroupsFirst:"Finish the group stage to unlock.",
+  pickPrevRound:"Pick the previous round to reveal these matches.",
+  bracketLock:(rem,left)=>`🔒 Pick all ${rem} remaining group games above to unlock the knockout bracket — ${left} to go. Your group tables then decide who advances and seed the Round of 32.`,
+  groupName:l=>`Group ${l}`,
+  tapWinner:"tap the winner",
+  gamesPicked:(p,r)=>`· ${p}/${r} games picked`,
+  groupsComplete:"· complete",
+  r32:"Round of 32", r16:"Round of 16", qf:"Quarter-finals", sf:"Semi-finals", finalRound:"Final",
+  championLabelKO:"Champion",
+  rankedSummary:n=>`${n} ranked · correct picks ÷ picks on played games`,
+  accEmpty:"Once games are played and players have made picks, accuracy will show here.",
+  langSwitch:"عربي"
+};
+
+const T_AR={
+  title:"كأس العالم 2026", subtitle:"التوقعات مقابل النتائج المباشرة",
+  chooseLeague:"اختر دوريك", league1:"الدوري الأول", league2:"الدوري الثاني",
+  loading:"جاري التحميل…", awaiting:"بانتظار النتائج",
+  live:n=>`مباشر · ${n}/72 مباراة لُعبت`,
+  champion:t=>`البطل: ${t} 🏆`,
+  switchLeague:"تغيير الدوري", players:"مشاركون",
+  tabStandings:"🏆 الترتيب", tabMatches:"⚽ المباريات", tabGroups:"📊 المجموعات",
+  tabKnockouts:"👑 الأدوار الإقصائية", tabSubmit:"➕ المشاركة", tabResults:"✏️ النتائج",
+  predictorsHeading:"🏅 المتوقعون", accuracyHeading:"🎯 الدقة",
+  accuracySubtitle:"· نسبة التوقعات الصحيحة",
+  scoringHeading:"كيف يُحتسب التسجيل",
+  scoringMatch:"<b>+3</b> لكل نتيجة مباراة صحيحة.",
+  scoringPosition:"<b>+3</b> لكل فريق في مركزه النهائي الصحيح ضمن المجموعة — تُثبَّت النقاط عند انتهاء جميع مباريات المجموعة.",
+  scoringThird:"<b>+4</b> لكل توقع صحيح لأفضل المتأهلين من المراكز الثالثة — عند انتهاء دور المجموعات.",
+  scoringChampion:"<b>+25</b> للتوقع الصحيح للبطل.",
+  scoringFooter:"توقع الفائز بالمباراة مأخوذ من ترتيب الشخص لفريقي المجموعة. مباريات الأدوار الإقصائية تختلف من شخص لآخر، لذا تُعرض للاطلاع تحت قسم الأدوار الإقصائية.",
+  matchesNote:"نتائج مباريات المجموعات الفعلية حتى الآن (مباشر). كل خلية تُظهر توقع الفائز — أخضر = صحيح، أحمر = خطأ، رمادي = لم تُلعب بعد.",
+  groupsNote:"الجداول المباشرة للمجموعات (محتسبة تلقائياً) مقابل الترتيب المتوقع لكل شخص. ✓ = التوقع يطابق المركز الحالي.",
+  championPicksHeading:"توقعات البطل",
+  championPicksSub:"يتحول إلى أخضر/أحمر عند تحديد البطل الفعلي.",
+  fullBracketsHeading:"جداول الأدوار الإقصائية",
+  fullBracketsSub:"الفائزون في دور الـ32 كما توقعهم كل شخص.",
+  predict:"توقع", yourName:"اسمك", enterNameFirst:"أدخل اسمك أولاً.",
+  groupStage:"دور المجموعات", knockoutsSection:"الأدوار الإقصائية",
+  yourChampion:"🏆 توقعك للبطل",
+  submit:"إرسال", submitting:"جاري الإرسال…",
+  submitOk:"✅ تم الإرسال", submitErr:"خطأ في الاتصال — حاول مرة أخرى",
+  actualsWarn:"النتائج أدناه هي النتائج الفعلية المُحمَّلة مسبقاً. عدّل أي نتيجة واضغط حفظ مع تقدم البطولة — التعديلات تُحفظ على هذا الجهاز فقط.",
+  groupGameResults:"نتائج مباريات المجموعات", leaveBlank:"اترك المباراة فارغة (كلا الرقمين) للإشارة إلى أنها لم تُلعب بعد.",
+  worldCupChampion:"بطل كأس العالم", notDecided:"— لم يُحدد بعد —",
+  saveResults:"💾 حفظ النتائج", resetOfficial:"↺ إعادة تعيين إلى النتائج الرسمية",
+  savedToast:"✅ تم الحفظ", resetToast:"تمت الإعادة إلى النتائج الرسمية",
+  confirmReset:"إعادة جميع النتائج إلى الرسمية ومسح تعديلاتك؟",
+  footerCredits:"النتائج المباشرة عبر ويكيبيديا · التوقعات من أداة The Telegraph للتنبؤ بكأس العالم 2026.",
+  footerBuilt:"تم البناء لمجموعة FMVA · انقر على اسم في جدول الترتيب لعرض التفاصيل.",
+  noResultsYet:"لا توجد نتائج بعد.",
+  liveRanked:n=>`مباشر — ${n}/72 مباراة لُعبت. الترتيب حسب مجموع النقاط.`,
+  matchPicksLabel:(c,d)=>`${c}/${d} توقع مباراة`,
+  correctLabel:(c,d)=>`${c}/${d} صحيح`,
+  tablePts:p=>`+${p} جدول`,
+  champPts:"+25 بطل",
+  pts:"نقطة", acc:"دقة", playedSuffix:"لُعبت",
+  played:n=>`${n}/6 لُعبت`,
+  final:"نهائي", liveTable:"الجدول الحالي", finalTable:"الجدول النهائي",
+  livePos:"حالي", finalPos:"نهائي",
+  resultRow:"✅ النتيجة",
+  pos1:"الأول", pos2:"الثاني", pos3:"الثالث", pos4:"الرابع",
+  draw:"تعادل", winSuffix:" فاز",
+  gameLabel:"المباراة",
+  noPick:"بدون توقع", groupOnly:"المجموعات فقط", fullBracket:"جدول كامل",
+  joiner:"مشارك جديد", joinerLabel:"مشارك جديد",
+  bracketNotFilled:"لم يُملأ جدول الأدوار الإقصائية — دور المجموعات فقط.",
+  groupCompleteEmpty:"جميع مباريات المجموعات لُعبت — الترتيب نهائي. اختر الأدوار الإقصائية أدناه.",
+  finishGroupsFirst:"أكمل دور المجموعات للفتح.",
+  pickPrevRound:"اختر الجولة السابقة لكشف هذه المباريات.",
+  bracketLock:(rem,left)=>`🔒 اختر جميع الـ${rem} مباريات المتبقية أعلاه لفتح الأدوار الإقصائية — متبقي ${left}. الترتيب الذي تُحدده يقرر المتأهلين ويرسم دور الـ32.`,
+  groupName:l=>`المجموعة ${l}`,
+  tapWinner:"اختر الفائز",
+  gamesPicked:(p,r)=>`· ${p}/${r} مباراة متوقعة`,
+  groupsComplete:"· مكتمل",
+  r32:"دور الـ32", r16:"دور الـ16", qf:"ربع النهائي", sf:"نصف النهائي", finalRound:"النهائي",
+  championLabelKO:"البطل",
+  rankedSummary:n=>`${n} مرتبين · التوقعات الصحيحة ÷ التوقعات على المباريات المُلعبة`,
+  accEmpty:"ستظهر الدقة هنا بعد لعب المباريات وإجراء التوقعات.",
+  langSwitch:"EN"
+};
+const TR=LANG==='ar'?T_AR:T_EN;
+function t(k,...a){const v=TR[k];return typeof v==='function'?v(...a):v;}
+
+/* Team Arabic names. Abbreviations stay Latin (FIFA codes). */
+const TEAM_AR={"Mexico":"المكسيك","South Korea":"كوريا الجنوبية","South Africa":"جنوب أفريقيا","Czech Republic":"التشيك","Canada":"كندا","Switzerland":"سويسرا","Qatar":"قطر","Bosnia-Herzegovina":"البوسنة والهرسك","Brazil":"البرازيل","Morocco":"المغرب","Scotland":"اسكتلندا","Haiti":"هايتي","USA":"الولايات المتحدة","Turkey":"تركيا","Paraguay":"باراغواي","Australia":"أستراليا","Germany":"ألمانيا","Ecuador":"الإكوادور","Ivory Coast":"ساحل العاج","Curacao":"كوراساو","Netherlands":"هولندا","Japan":"اليابان","Sweden":"السويد","Tunisia":"تونس","Belgium":"بلجيكا","Egypt":"مصر","Iran":"إيران","New Zealand":"نيوزيلندا","Spain":"إسبانيا","Uruguay":"أوروغواي","Saudi Arabia":"السعودية","Cape Verde":"الرأس الأخضر","France":"فرنسا","Norway":"النرويج","Senegal":"السنغال","Iraq":"العراق","Argentina":"الأرجنتين","Algeria":"الجزائر","Austria":"النمسا","Jordan":"الأردن","Portugal":"البرتغال","Colombia":"كولومبيا","Uzbekistan":"أوزبكستان","DR Congo":"الكونغو الديمقراطية","England":"إنجلترا","Croatia":"كرواتيا","Ghana":"غانا","Panama":"بنما"};
+function nm(team){return LANG==='ar'?(TEAM_AR[team]||team):team;}
+
+/* Player Arabic names */
+const NAME_AR={"Mohsen":"محسن","Tamim":"تميم","Bader":"بدر","Naser":"ناصر","Thamer":"ثامر","Ahmed Esam":"أحمد عصام","Othman Tariq":"عثمان طارق","Abdulrahman Othman Tariq":"عبدالرحمن عثمان طارق","Mohammad Saad":"محمد سعد","Salman Othman Tariq":"سلمان عثمان طارق","Tariq Othman Tariq":"طارق عثمان طارق"};
+function pn(name){return LANG==='ar'?(NAME_AR[name]||name):name;}
+
+/* Dates: "Jun 11" -> "11 يونيو" in AR. */
+const MONTH_AR={"Jun":"يونيو","Jul":"يوليو"};
+function dt(d){if(LANG!=='ar'||!d)return d;const[m,n]=d.split(' ');return `${n} ${MONTH_AR[m]||m}`;}
+
+/* ===== Apply static i18n on load ===== */
+document.title=t('title')+' — '+t('subtitle');
+document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(TR[k]!==undefined)el.innerHTML=t(k);});
+document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(TR[k]!==undefined)el.setAttribute('placeholder',t(k));});
+
+/* Language toggle */
+(function(){const a=document.getElementById('langToggle');a.textContent=t('langSwitch');
+  const u=new URL(location.href);if(LANG==='ar')u.searchParams.delete('lang');else u.searchParams.set('lang','ar');
+  a.href=u.pathname+u.search+u.hash;})();
+
+/* ===== Reference data ===== */
 const ISO={"Mexico":"mx","South Korea":"kr","South Africa":"za","Czech Republic":"cz","Canada":"ca","Switzerland":"ch","Qatar":"qa","Bosnia-Herzegovina":"ba","Brazil":"br","Morocco":"ma","Scotland":"gb-sct","Haiti":"ht","USA":"us","Turkey":"tr","Paraguay":"py","Australia":"au","Germany":"de","Ecuador":"ec","Ivory Coast":"ci","Curacao":"cw","Netherlands":"nl","Japan":"jp","Sweden":"se","Tunisia":"tn","Belgium":"be","Egypt":"eg","Iran":"ir","New Zealand":"nz","Spain":"es","Uruguay":"uy","Saudi Arabia":"sa","Cape Verde":"cv","France":"fr","Norway":"no","Senegal":"sn","Iraq":"iq","Argentina":"ar","Algeria":"dz","Austria":"at","Jordan":"jo","Portugal":"pt","Colombia":"co","Uzbekistan":"uz","DR Congo":"cd","England":"gb-eng","Croatia":"hr","Ghana":"gh","Panama":"pa"};
 const ABBR={"Mexico":"MEX","South Korea":"KOR","South Africa":"RSA","Czech Republic":"CZE","Canada":"CAN","Switzerland":"SUI","Qatar":"QAT","Bosnia-Herzegovina":"BIH","Brazil":"BRA","Morocco":"MAR","Scotland":"SCO","Haiti":"HAI","USA":"USA","Turkey":"TUR","Paraguay":"PAR","Australia":"AUS","Germany":"GER","Ecuador":"ECU","Ivory Coast":"CIV","Curacao":"CUW","Netherlands":"NED","Japan":"JPN","Sweden":"SWE","Tunisia":"TUN","Belgium":"BEL","Egypt":"EGY","Iran":"IRN","New Zealand":"NZL","Spain":"ESP","Uruguay":"URU","Saudi Arabia":"KSA","Cape Verde":"CPV","France":"FRA","Norway":"NOR","Senegal":"SEN","Iraq":"IRQ","Argentina":"ARG","Algeria":"ALG","Austria":"AUT","Jordan":"JOR","Portugal":"POR","Colombia":"COL","Uzbekistan":"UZB","DR Congo":"COD","England":"ENG","Croatia":"CRO","Ghana":"GHA","Panama":"PAN"};
 const GROUPS={A:["Mexico","South Korea","South Africa","Czech Republic"],B:["Canada","Switzerland","Qatar","Bosnia-Herzegovina"],C:["Brazil","Morocco","Scotland","Haiti"],D:["USA","Turkey","Paraguay","Australia"],E:["Germany","Ecuador","Ivory Coast","Curacao"],F:["Netherlands","Japan","Sweden","Tunisia"],G:["Belgium","Egypt","Iran","New Zealand"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Norway","Senegal","Iraq"],J:["Argentina","Algeria","Austria","Jordan"],K:["Portugal","Colombia","Uzbekistan","DR Congo"],L:["England","Croatia","Ghana","Panama"]};
 const GK=Object.keys(GROUPS);
 const ALL_TEAMS=GK.flatMap(k=>GROUPS[k]).sort();
 
-/* ===== Real fixtures + results (scores: null = not played) ===== */
 const FIXTURES={
  A:[["Mexico","South Africa","Jun 11",2,0],["South Korea","Czech Republic","Jun 11",2,1],["Czech Republic","South Africa","Jun 18",1,1],["Mexico","South Korea","Jun 18",1,0],["Czech Republic","Mexico","Jun 24",null,null],["South Africa","South Korea","Jun 24",null,null]],
  B:[["Canada","Bosnia-Herzegovina","Jun 12",1,1],["Qatar","Switzerland","Jun 13",1,1],["Switzerland","Bosnia-Herzegovina","Jun 18",4,1],["Canada","Qatar","Jun 18",6,0],["Switzerland","Canada","Jun 24",null,null],["Bosnia-Herzegovina","Qatar","Jun 24",null,null]],
@@ -278,7 +452,6 @@ const FIXTURES={
  L:[["England","Croatia","Jun 17",4,2],["Ghana","Panama","Jun 17",1,0],["England","Ghana","Jun 23",null,null],["Panama","Croatia","Jun 23",null,null],["Panama","England","Jun 27",null,null],["Croatia","Ghana","Jun 27",null,null]]
 };
 
-/* ===== Predictions (from the 11 PDFs) ===== */
 const PREDICTIONS=[
  {name:"Mohsen",champion:"Croatia",knockoutCompleted:true,groups:{A:["Mexico","South Korea","Czech Republic","South Africa"],B:["Canada","Switzerland","Bosnia-Herzegovina","Qatar"],C:["Brazil","Morocco","Scotland","Haiti"],D:["USA","Turkey","Paraguay","Australia"],E:["Ecuador","Germany","Ivory Coast","Curacao"],F:["Netherlands","Japan","Tunisia","Sweden"],G:["Belgium","Egypt","New Zealand","Iran"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Senegal","Norway","Iraq"],J:["Argentina","Algeria","Austria","Jordan"],K:["Portugal","Colombia","Uzbekistan","DR Congo"],L:["Croatia","England","Ghana","Panama"]},thirdPlace:["Bosnia-Herzegovina","Paraguay","Ivory Coast","Tunisia","Saudi Arabia","Norway","Uzbekistan","Ghana"],r32:[[73,"South Korea","Switzerland","South Korea"],[74,"Ecuador","Paraguay","Ecuador"],[75,"Netherlands","Morocco","Morocco"],[76,"Brazil","Japan","Brazil"],[77,"France","Tunisia","France"],[78,"Germany","Senegal","Germany"],[79,"Mexico","Ivory Coast","Mexico"],[80,"Croatia","Uzbekistan","Croatia"],[81,"USA","Bosnia-Herzegovina","Bosnia-Herzegovina"],[82,"Belgium","Saudi Arabia","Belgium"],[83,"Colombia","England","Colombia"],[84,"Spain","Algeria","Spain"],[85,"Canada","Norway","Norway"],[86,"Argentina","Uruguay","Argentina"],[87,"Portugal","Ghana","Portugal"],[88,"Turkey","Egypt","Turkey"]]},
  {name:"Tamim",champion:"Brazil",knockoutCompleted:true,groups:{A:["Mexico","South Africa","Czech Republic","South Korea"],B:["Switzerland","Canada","Bosnia-Herzegovina","Qatar"],C:["Brazil","Scotland","Morocco","Haiti"],D:["USA","Paraguay","Turkey","Australia"],E:["Germany","Ecuador","Curacao","Ivory Coast"],F:["Netherlands","Tunisia","Sweden","Japan"],G:["Belgium","New Zealand","Iran","Egypt"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Senegal","Norway","Iraq"],J:["Argentina","Algeria","Austria","Jordan"],K:["Portugal","Colombia","DR Congo","Uzbekistan"],L:["England","Croatia","Ghana","Panama"]},thirdPlace:["Czech Republic","Morocco","Turkey","Sweden","Iran","Saudi Arabia","Norway","Ghana"],r32:[[73,"South Africa","Canada","Canada"],[74,"Germany","Morocco","Germany"],[75,"Netherlands","Scotland","Netherlands"],[76,"Brazil","Tunisia","Brazil"],[77,"France","Turkey","France"],[78,"Ecuador","Senegal","Senegal"],[79,"Mexico","Saudi Arabia","Mexico"],[80,"England","Norway","England"],[81,"USA","Sweden","USA"],[82,"Belgium","Czech Republic","Belgium"],[83,"Colombia","Croatia","Croatia"],[84,"Spain","Algeria","Spain"],[85,"Switzerland","Iran","Switzerland"],[86,"Argentina","Uruguay","Argentina"],[87,"Portugal","Ghana","Portugal"],[88,"Paraguay","New Zealand","Paraguay"]]},
@@ -290,44 +463,38 @@ const PREDICTIONS=[
  {name:"Ahmed Esam",champion:null,knockoutCompleted:false,groups:{A:["Mexico","South Korea","Czech Republic","South Africa"],B:["Canada","Bosnia-Herzegovina","Switzerland","Qatar"],C:["Brazil","Morocco","Scotland","Haiti"],D:["Paraguay","Turkey","Australia","USA"],E:["Germany","Ecuador","Ivory Coast","Curacao"],F:["Japan","Netherlands","Sweden","Tunisia"],G:["Belgium","Egypt","New Zealand","Iran"],H:["Spain","Saudi Arabia","Uruguay","Cape Verde"],I:["France","Norway","Senegal","Iraq"],J:["Argentina","Algeria","Jordan","Austria"],K:["Portugal","Colombia","DR Congo","Uzbekistan"],L:["England","Croatia","Panama","Ghana"]},thirdPlace:["Czech Republic","Scotland","Australia","Ivory Coast","Sweden","Uruguay","Senegal","Jordan"],r32:[[73,"South Korea","Bosnia-Herzegovina",null],[74,"Germany","Scotland","Germany"],[75,"Japan","Morocco","Morocco"],[76,"Brazil","Netherlands","Brazil"],[77,"France","Sweden","France"],[78,"Ecuador","Norway","Norway"],[79,"Mexico","Uruguay","Uruguay"],[80,"England","Senegal","England"],[81,"Paraguay","Ivory Coast","Paraguay"],[82,"Belgium","Czech Republic","Belgium"],[83,"Colombia","Croatia","Croatia"],[84,"Spain","Algeria","Spain"],[85,"Canada","Jordan","Jordan"],[86,"Argentina","Saudi Arabia","Argentina"],[87,"Portugal","Australia","Portugal"],[88,"Turkey","Egypt","Turkey"]]},
  {name:"Mohammad Saad",champion:"Portugal",knockoutCompleted:true,groups:{A:["Mexico","South Korea","Czech Republic","South Africa"],B:["Switzerland","Bosnia-Herzegovina","Qatar","Canada"],C:["Morocco","Brazil","Scotland","Haiti"],D:["Turkey","Paraguay","USA","Australia"],E:["Germany","Ecuador","Ivory Coast","Curacao"],F:["Japan","Netherlands","Sweden","Tunisia"],G:["Belgium","Egypt","Iran","New Zealand"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Senegal","Norway","Iraq"],J:["Argentina","Austria","Algeria","Jordan"],K:["Portugal","Colombia","Uzbekistan","DR Congo"],L:["England","Croatia","Ghana","Panama"]},thirdPlace:["Qatar","Scotland","USA","Sweden","Saudi Arabia","Norway","Algeria","Ghana"],r32:[[73,"South Korea","Bosnia-Herzegovina","South Korea"],[74,"Germany","USA","Germany"],[75,"Japan","Brazil","Brazil"],[76,"Morocco","Netherlands","Morocco"],[77,"France","Sweden","France"],[78,"Ecuador","Senegal","Senegal"],[79,"Mexico","Scotland","Mexico"],[80,"England","Norway","England"],[81,"Turkey","Qatar","Turkey"],[82,"Belgium","Saudi Arabia","Belgium"],[83,"Colombia","Croatia","Colombia"],[84,"Spain","Austria","Spain"],[85,"Switzerland","Algeria","Switzerland"],[86,"Argentina","Uruguay","Argentina"],[87,"Portugal","Ghana","Portugal"],[88,"Paraguay","Egypt","Egypt"]]},
  {name:"Salman Othman Tariq",champion:"Spain",knockoutCompleted:true,groups:{A:["Mexico","South Korea","Czech Republic","South Africa"],B:["Canada","Bosnia-Herzegovina","Switzerland","Qatar"],C:["Morocco","Brazil","Scotland","Haiti"],D:["Turkey","Australia","USA","Paraguay"],E:["Germany","Ecuador","Ivory Coast","Curacao"],F:["Netherlands","Japan","Sweden","Tunisia"],G:["Belgium","Egypt","Iran","New Zealand"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Norway","Senegal","Iraq"],J:["Argentina","Algeria","Austria","Jordan"],K:["Portugal","Colombia","DR Congo","Uzbekistan"],L:["England","Croatia","Ghana","Panama"]},thirdPlace:["Scotland","Ivory Coast","Sweden","Saudi Arabia","Senegal","Austria","DR Congo","Ghana"],r32:[[73,"South Korea","Bosnia-Herzegovina","South Korea"],[74,"Germany","Scotland","Germany"],[75,"Netherlands","Brazil","Netherlands"],[76,"Morocco","Japan","Morocco"],[77,"France","Sweden","France"],[78,"Ecuador","Norway","Norway"],[79,"Mexico","Ivory Coast","Mexico"],[80,"England","DR Congo","England"],[81,"Turkey","Senegal","Senegal"],[82,"Belgium","Saudi Arabia","Belgium"],[83,"Colombia","Croatia","Croatia"],[84,"Spain","Algeria","Spain"],[85,"Canada","Austria","Canada"],[86,"Argentina","Uruguay","Argentina"],[87,"Portugal","Ghana","Portugal"],[88,"Australia","Egypt","Egypt"]]},
- {name:"Tariq Othman Tariq",champion:"France",knockoutCompleted:true,groups:{A:["South Korea","Mexico","Czech Republic","South Africa"],B:["Switzerland","Bosnia-Herzegovina","Canada","Qatar"],C:["Morocco","Brazil","Scotland","Haiti"],D:["Turkey","Australia","USA","Paraguay"],E:["Germany","Ivory Coast","Ecuador","Curacao"],F:["Japan","Netherlands","Sweden","Tunisia"],G:["Belgium","Iran","Egypt","New Zealand"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Norway","Senegal","Iraq"],J:["Argentina","Algeria","Austria","Jordan"],K:["Portugal","Colombia","DR Congo","Uzbekistan"],L:["England","Croatia","Ghana","Panama"]},thirdPlace:["USA","Ecuador","Sweden","Egypt","Saudi Arabia","Senegal","DR Congo","Ghana"],r32:[[73,"Mexico","Bosnia-Herzegovina","Mexico"],[74,"Germany","USA","Germany"],[75,"Japan","Brazil","Japan"],[76,"Morocco","Netherlands","Morocco"],[77,"France","Sweden","France"],[78,"Ivory Coast","Norway","Norway"],[79,"South Korea","Ecuador","South Korea"],[80,"England","DR Congo","England"],[81,"Turkey","Senegal","Senegal"],[82,"Belgium","Saudi Arabia","Belgium"],[83,"Colombia","Croatia","Colombia"],[84,"Spain","Algeria","Spain"],[85,"Switzerland","Egypt","Switzerland"],[86,"Argentina","Uruguay","Argentina"],[87,"Portugal","Ghana","Portugal"],[88,"Australia","Iran","Iran"]]}
+ {name:"Tariq Othman Tariq",champion:"France",knockoutCompleted:true,groups:{A:["South Korea","Mexico","Czech Republic","South Africa"],B:["Switzerland","Bosnia-Herzegovina","Canada","Qatar"],C:["Morocco","Brazil","Scotland","Haiti"],D:["Turkey","Australia","USA","Paraguay"],E:["Germany","Ivory Coast","Ecuador","Curacao"],F:["Japan","Netherlands","Sweden","Tunisia"],G:["Belgium","Iran","Egypt","New Zealand"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Norway","Senegal","Iraq"],J:["Argentina","Algeria","Austria","Jordan"],K:["Portugal","Colombia","DR Congo","Uzbekistan"],L:["England","Croatia","Ghana","Panama"]},thirdPlace:["USA","Ecuador","Sweden","Egypt","Saudi Arabia","Senegal","DR Congo","Ghana"],r32:[[73,"Mexico","Bosnia-Herzegovina","Mexico"],[74,"Germany","USA","Germany"],[75,"Japan","Brazil","Japan"],[76,"Morocco","Netherlands","Morocco"],[77,"France","Sweden","France"],[78,"Ivory Coast","Norway","Norway"],[79,"South Korea","Ecuador","South Korea"],[80,"England","DR Congo","England"],[81,"Turkey","Senegal","Senegal"],[82,"Belgium","Saudi Arabia","Belgium"],[83,"Colombia","Croatia","Croatia"],[84,"Spain","Algeria","Spain"],[85,"Switzerland","Egypt","Switzerland"],[86,"Argentina","Uruguay","Argentina"],[87,"Portugal","Ghana","Portugal"],[88,"Australia","Iran","Iran"]]}
 ];
 
-/* ===== Leagues (two friend groups; share a link per league) ===== */
 const ROSTERS={
- "1":{label:"League 1",names:["Tamim","Mohsen","Bader","Naser","Thamer","Ahmed Esam"]},
- "2":{label:"League 2",names:["Othman Tariq","Abdulrahman Othman Tariq","Mohammad Saad","Salman Othman Tariq","Tariq Othman Tariq","Mohsen"]}
+ "1":{labelKey:"league1",names:["Tamim","Mohsen","Bader","Naser","Thamer","Ahmed Esam"]},
+ "2":{labelKey:"league2",names:["Othman Tariq","Abdulrahman Othman Tariq","Mohammad Saad","Salman Othman Tariq","Tariq Othman Tariq","Mohsen"]}
 };
 const PARAM=new URLSearchParams(location.search).get('g');
 const ACTIVE=ROSTERS[PARAM]||null;
 const ROSTER=ACTIVE?PREDICTIONS.filter(p=>ACTIVE.names.includes(p.name)):PREDICTIONS;
 
-/* ===== State: working copies, session-only (no persistence). Wipe any legacy local data. ===== */
 try{localStorage.removeItem("wc2026_v2");localStorage.removeItem("wc2026_guessers");}catch(e){}
 let CHAMPION="";
 let GAMES=JSON.parse(JSON.stringify(FIXTURES));
-function persist(){} // no-op; reload always returns to the baked-in official results
+function persist(){}
 
-/* ===== Helpers ===== */
-function flag(t){const c=ISO[t]||"";return `<img class="flag" loading="lazy" alt="" src="https://flagcdn.com/w40/${c}.png" onerror="this.style.visibility='hidden'">`;}
+function flag(team){const c=ISO[team]||"";return `<img class="flag" loading="lazy" alt="" src="https://flagcdn.com/w40/${c}.png" onerror="this.style.visibility='hidden'">`;}
 function el(h){const t=document.createElement('template');t.innerHTML=h.trim();return t.content.firstChild;}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
 function played(fx){return fx[3]!==null&&fx[3]!==undefined&&fx[4]!==null&&fx[4]!==undefined;}
 function winnerOf(fx){if(!played(fx))return null;if(fx[3]>fx[4])return fx[0];if(fx[4]>fx[3])return fx[1];return "DRAW";}
 function gidx(g,i){return GK.indexOf(g)*6+i;}
-/* Predicted winner of a fixture for any entrant: baked entrant uses group ranking; guest uses explicit pick (null = not picked). */
 function entryPick(p,g,i,a,b){
   if(p.groups){const o=p.groups[g];return o.indexOf(a)<o.indexOf(b)?a:b;}
   const v=p.picks&&p.picks[gidx(g,i)];return v==='A'?a:(v==='B'?b:null);
 }
-/* Session-only runtime joiners (cleared on reload — only BAKED_GUESSERS persist). */
+
 const RUNTIME_GUESSERS=[];
 function loadGuessers(){return RUNTIME_GUESSERS;}
-function saveGuessers(){} // no-op
+function saveGuessers(){}
 function upsertGuesser(g){const i=RUNTIME_GUESSERS.findIndex(x=>x.league===g.league&&x.name.toLowerCase()===g.name.toLowerCase());if(i>=0)RUNTIME_GUESSERS[i]=g;else RUNTIME_GUESSERS.push(g);}
-/* Joiners baked into the site (submitted via the form, added by the maintainer). */
 const BAKED_GUESSERS=[];
-/* Active entrants for the current league = baked roster + baked guests + local-only guests. */
 function ENT(){
   const local=loadGuessers().filter(x=>!PARAM||x.league===PARAM);
   const baked=BAKED_GUESSERS.filter(x=>!PARAM||x.league===PARAM);
@@ -338,7 +505,6 @@ function ENT(){
 function gamesPlayed(){let n=0;GK.forEach(g=>GAMES[g].forEach(fx=>{if(played(fx))n++;}));return n;}
 function groupComplete(g){return GAMES[g].every(played);}
 
-/* Live standings from results */
 function standings(g){
   const st={};GROUPS[g].forEach(t=>st[t]={t,pld:0,w:0,d:0,l:0,gf:0,ga:0,pts:0});
   GAMES[g].forEach(fx=>{if(!played(fx))return;const[a,b,,sa,sb]=fx;
@@ -347,7 +513,6 @@ function standings(g){
   });
   return Object.values(st).sort((x,y)=>y.pts-x.pts||(y.gf-y.ga)-(x.gf-x.ga)||y.gf-x.gf||x.t.localeCompare(y.t));
 }
-/* Actual best 8 third-place teams (only when all groups complete) */
 function thirdQualifiers(){
   if(!GK.every(groupComplete))return null;
   const thirds=GK.map(g=>{const s=standings(g)[2];return {...s,g};});
@@ -355,8 +520,6 @@ function thirdQualifiers(){
   return thirds.slice(0,8).map(t=>t.t);
 }
 
-/* ===== Knockout bracket template (official WC2026) ===== */
-// slot refs: "W:A"=winner grp A, "R:A"=runner-up grp A, "T:74"=third-place team in match 74's slot
 const R32DEF=[
  [73,"R:A","R:B"],[74,"W:E","T:74"],[75,"W:F","R:C"],[76,"W:C","R:F"],
  [77,"W:I","T:77"],[78,"R:E","R:I"],[79,"W:A","T:79"],[80,"W:L","T:80"],
@@ -364,14 +527,12 @@ const R32DEF=[
  [85,"W:B","T:85"],[86,"W:J","R:H"],[87,"W:K","T:87"],[88,"R:D","R:G"]
 ];
 const TSLOT={74:"ABCDF",77:"CDFGH",79:"CEFHI",80:"EHIJK",81:"BEFIJ",82:"AEHIJ",85:"EFGIJ",87:"DEIJL"};
-// later rounds: match -> [feederMatchA, feederMatchB]
 const PROG={89:[74,77],90:[73,75],91:[76,78],92:[79,80],93:[83,84],94:[81,82],95:[86,88],96:[85,87],
  97:[89,90],98:[93,94],99:[91,92],100:[95,96],101:[97,98],102:[99,100],104:[101,102]};
-const KO_ROUNDS=[["Round of 32",[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]],
- ["Round of 16",[89,90,91,92,93,94,95,96]],["Quarter-finals",[97,98,99,100]],
- ["Semi-finals",[101,102]],["Final",[104]]];
+function koRounds(){return [[t('r32'),[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]],
+ [t('r16'),[89,90,91,92,93,94,95,96]],[t('qf'),[97,98,99,100]],
+ [t('sf'),[101,102]],[t('finalRound'),[104]]];}
 
-/* guesser's predicted final order for a group (real results for played games + their picks for the rest); null if any remaining game unpicked */
 function guesserOrder(picks,g){
   const st={};GROUPS[g].forEach((t,idx)=>st[t]={t,pts:0,gd:0,gf:0,seed:idx});
   let ok=true;
@@ -383,7 +544,6 @@ function guesserOrder(picks,g){
   if(!ok)return null;
   return Object.values(st).sort((x,y)=>y.pts-x.pts||y.gd-x.gd||y.gf-x.gf||x.seed-y.seed).map(s=>s.t);
 }
-/* assign the 8 best third-place groups to the 8 third-slots respecting allowed groups (perfect matching) */
 function assignThirds(thirdGroups){
   const slots=Object.keys(TSLOT).map(Number);
   const res={};const used={};
@@ -395,11 +555,9 @@ function assignThirds(thirdGroups){
   }
   return bt(0)?res:null;
 }
-/* full predicted bracket for a guesser: returns {ready, M:{matchNo:{a,b,winner}}, champion} */
 function buildBracket(picks,ko){
   const order={};for(const g of GK){order[g]=guesserOrder(picks,g);if(!order[g])return {ready:false};}
   const W={},R={};GK.forEach(g=>{W[g]=order[g][0];R[g]=order[g][1];});
-  // best 8 thirds
   const thirds=GK.map(g=>({g,t:order[g][2]}));
   const stat={};GK.forEach(g=>{const o=guesserOrderStats(picks,g);stat[g]=o[2];});
   thirds.sort((x,y)=>stat[y.g].pts-stat[x.g].pts||stat[y.g].gd-stat[x.g].gd||stat[y.g].gf-stat[x.g].gf||GK.indexOf(x.g)-GK.indexOf(y.g));
@@ -409,14 +567,12 @@ function buildBracket(picks,ko){
   const resolve=ref=>{const[k,v]=ref.split(":");return k==="W"?W[v]:k==="R"?R[v]:thirdTeam[v];};
   const M={};
   R32DEF.forEach(([n,a,b])=>{M[n]={a:resolve(a),b:resolve(b),winner:null};});
-  // order to fill later rounds
   [73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,104].forEach(n=>{
     if(PROG[n]){const[fa,fb]=PROG[n];M[n]={a:M[fa]?M[fa].winner:null,b:M[fb]?M[fb].winner:null,winner:null};}
     const w=ko&&ko[n];if(w&&(w===M[n].a||w===M[n].b))M[n].winner=w;
   });
   return {ready:true,M,champion:M[104]?M[104].winner:null};
 }
-// stats variant returning full stat objects (for third ranking)
 function guesserOrderStats(picks,g){
   const st={};GROUPS[g].forEach((t,idx)=>st[t]={t,pts:0,gd:0,gf:0,seed:idx});
   GAMES[g].forEach((fx,i)=>{const[a,b,,sa,sb]=fx;
@@ -425,13 +581,12 @@ function guesserOrderStats(picks,g){
   return Object.values(st).sort((x,y)=>y.pts-x.pts||y.gd-x.gd||y.gf-x.gf||x.seed-y.seed);
 }
 
-/* ===== Scoring ===== */
 function scoreOf(p){
   let match=0,correct=0,decided=0,posPts=0,third=0,champ=0;
   GK.forEach(g=>{
     GAMES[g].forEach((fx,i)=>{
       if(!played(fx))return;
-      const pw=entryPick(p,g,i,fx[0],fx[1]);if(pw===null)return; // guest didn't predict this game
+      const pw=entryPick(p,g,i,fx[0],fx[1]);if(pw===null)return;
       decided++;
       const aw=winnerOf(fx);
       if(aw!=="DRAW"&&pw===aw){match+=3;correct++;}
@@ -448,27 +603,27 @@ function scoreOf(p){
 function renderStatus(){
   const dot=document.getElementById('statusDot'),txt=document.getElementById('statusText');
   const n=gamesPlayed();
-  if(CHAMPION){dot.className='status-dot';txt.textContent='Champion: '+CHAMPION+' 🏆';}
-  else if(n>0){dot.className='status-dot live';txt.textContent='Live · '+n+'/72 group games played';}
-  else{dot.className='status-dot';txt.textContent='Awaiting results';}
+  if(CHAMPION){dot.className='status-dot';txt.textContent=t('champion',nm(CHAMPION));}
+  else if(n>0){dot.className='status-dot live';txt.textContent=t('live',n);}
+  else{dot.className='status-dot';txt.textContent=t('awaiting');}
 }
 
 function renderLeaderboard(){
   const n=gamesPlayed();
   const rows=ENT().map(p=>({p,s:scoreOf(p)})).sort((a,b)=>b.s.total-a.s.total||b.s.correct-a.s.correct||a.p.name.localeCompare(b.p.name));
   const max=Math.max(1,...rows.map(r=>r.s.total));
-  document.getElementById('lbSub').textContent=n? `Live — ${n}/72 group games played. Ranked by total points.` : 'No results yet.';
+  document.getElementById('lbSub').textContent=n? t('liveRanked',n) : t('noResultsYet');
   const wrap=document.getElementById('leaderboard');wrap.innerHTML='';
   rows.forEach((r,i)=>{
     const rk=i+1;const s=r.s;
-    const extra=[s.posPts?`+${s.posPts} table`:'',s.champ?'+25 champ':''].filter(Boolean).join(' · ');
+    const extra=[s.posPts?t('tablePts',s.posPts):'',s.champ?t('champPts'):''].filter(Boolean).join(' · ');
     const row=el(`<div class="lb-row" data-name="${r.p.name}">
       <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
-      <div class="lb-name">${r.p.name}${r.p.guest?' <span class="chip joiner">joiner</span>':''}
-        <small>${s.correct}/${s.decided} match picks${extra?' · '+extra:''}</small>
+      <div class="lb-name">${pn(r.p.name)}${r.p.guest?` <span class="chip joiner">${t('joinerLabel')}</span>`:''}
+        <small>${t('matchPicksLabel',s.correct,s.decided)}${extra?' · '+extra:''}</small>
         <div class="bar"><i style="width:${Math.round(s.total/max*100)}%"></i></div>
       </div>
-      <div class="lb-score">${s.total}<small>pts</small></div>
+      <div class="lb-score">${s.total}<small>${t('pts')}</small></div>
     </div>`);
     row.addEventListener('click',()=>{switchTab('champions');const d=document.querySelector(`details.box[data-name="${CSS.escape(r.p.name)}"]`);if(d){d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});}});
     wrap.appendChild(row);
@@ -479,19 +634,19 @@ function renderAccuracy(){
   const all=ENT().map(p=>({p,s:scoreOf(p)})).filter(r=>r.s.decided>0);
   const wrap=document.getElementById('accBoard');wrap.innerHTML='';
   const sub=document.getElementById('accSub');
-  if(!all.length){sub.textContent='Once games are played and players have made picks, accuracy will show here.';return;}
+  if(!all.length){sub.textContent=t('accEmpty');return;}
   all.forEach(r=>{r.acc=r.s.correct/r.s.decided;});
   all.sort((a,b)=>b.acc-a.acc||b.s.decided-a.s.decided||a.p.name.localeCompare(b.p.name));
-  sub.textContent=`${all.length} ranked · correct picks ÷ picks on played games`;
+  sub.textContent=t('rankedSummary',all.length);
   all.forEach((r,i)=>{
     const rk=i+1;const pct=Math.round(r.acc*100);
     const row=el(`<div class="lb-row">
       <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
-      <div class="lb-name">${r.p.name}${r.p.guest?' <span class="chip guest">joiner</span>':''}
-        <small>${r.s.correct}/${r.s.decided} correct</small>
+      <div class="lb-name">${pn(r.p.name)}${r.p.guest?` <span class="chip joiner">${t('joinerLabel')}</span>`:''}
+        <small>${t('correctLabel',r.s.correct,r.s.decided)}</small>
         <div class="bar"><i style="width:${pct}%"></i></div>
       </div>
-      <div class="lb-score">${pct}%<small>acc</small></div>
+      <div class="lb-score">${pct}%<small>${t('acc')}</small></div>
     </div>`);
     wrap.appendChild(row);
   });
@@ -502,18 +657,18 @@ function renderMatches(){
   GK.forEach(g=>{
     const fxs=GAMES[g];const done=fxs.filter(played).length;
     const card=el(`<div class="card"></div>`);
-    card.innerHTML=`<div class="grp-head"><span class="gname">Group ${g}</span><span class="chip ${done===6?'full':'live'}">${done}/6 played</span></div>`;
+    card.innerHTML=`<div class="grp-head"><span class="gname">${t('groupName',g)}</span><span class="chip ${done===6?'full':'live'}">${t('played',done)}</span></div>`;
     const box=el(`<div class="tablebox"></div>`);
-    let h=`<table class="cmp"><tr><th class="who">Game</th>`;
-    fxs.forEach(fx=>{h+=`<th>${ABBR[fx[0]]}–${ABBR[fx[1]]}<div class="mini">${fx[2]}</div></th>`;});
-    h+=`</tr><tr class="actualrow"><td class="who">✅ Result</td>`;
+    let h=`<table class="cmp"><tr><th class="who">${t('gameLabel')}</th>`;
+    fxs.forEach(fx=>{h+=`<th>${ABBR[fx[0]]}–${ABBR[fx[1]]}<div class="mini">${dt(fx[2])}</div></th>`;});
+    h+=`</tr><tr class="actualrow"><td class="who">${t('resultRow')}</td>`;
     fxs.forEach(fx=>{
-      if(played(fx)){const w=winnerOf(fx);h+=`<td class="score">${fx[3]}–${fx[4]}<div class="mini">${w==="DRAW"?'draw':ABBR[w]+' win'}</div></td>`;}
+      if(played(fx)){const w=winnerOf(fx);h+=`<td class="score">${fx[3]}–${fx[4]}<div class="mini">${w==="DRAW"?t('draw'):ABBR[w]+t('winSuffix')}</div></td>`;}
       else h+=`<td class="mini">—</td>`;
     });
     h+=`</tr>`;
     ENT().forEach(p=>{
-      h+=`<tr><td class="who">${p.name}${p.guest?' <span class="chip joiner">joiner</span>':''}</td>`;
+      h+=`<tr><td class="who">${pn(p.name)}${p.guest?` <span class="chip joiner">${t('joinerLabel')}</span>`:''}</td>`;
       fxs.forEach((fx,i)=>{
         const pw=entryPick(p,g,i,fx[0],fx[1]);
         if(pw===null){h+=`<td class="mini">—</td>`;}
@@ -532,16 +687,16 @@ function renderGroups(){
   GK.forEach(g=>{
     const st=standings(g);const fin=st.map(s=>s.t);const complete=groupComplete(g);const done=GAMES[g].filter(played).length;
     const card=el(`<div class="card"></div>`);
-    card.innerHTML=`<div class="grp-head"><span class="gname">Group ${g}</span><span class="chip ${complete?'full':'live'}">${complete?'Final':done+'/6 played'}</span></div>`;
+    card.innerHTML=`<div class="grp-head"><span class="gname">${t('groupName',g)}</span><span class="chip ${complete?'full':'live'}">${complete?t('final'):t('played',done)}</span></div>`;
     const box=el(`<div class="tablebox"></div>`);
-    let h=`<table class="cmp"><tr><th class="who">${complete?'Final':'Live'} table</th><th>1st</th><th>2nd</th><th>3rd</th><th>4th</th></tr>`;
-    h+=`<tr class="actualrow"><td class="who">✅ ${complete?'Final':'Live'}</td>`;
+    let h=`<table class="cmp"><tr><th class="who">${complete?t('finalTable'):t('liveTable')}</th><th>${t('pos1')}</th><th>${t('pos2')}</th><th>${t('pos3')}</th><th>${t('pos4')}</th></tr>`;
+    h+=`<tr class="actualrow"><td class="who">${complete?'✅ '+t('finalPos'):'✅ '+t('livePos')}</td>`;
     st.forEach(s=>{h+=`<td>${flag(s.t)} ${ABBR[s.t]}<div class="mini">${s.pts}p</div></td>`;});
     h+=`</tr>`;
     ENT().filter(p=>p.groups).forEach(p=>{
-      h+=`<tr><td class="who">${p.name}</td>`;
-      for(let i=0;i<4;i++){const t=p.groups[g][i];const ok=fin[i]===t&&done>0;
-        h+=`<td class="${ok?'cellc':'miss'}">${ABBR[t]} ${ok?'<span class="ok">✓</span>':''}</td>`;}
+      h+=`<tr><td class="who">${pn(p.name)}</td>`;
+      for(let i=0;i<4;i++){const tt=p.groups[g][i];const ok=fin[i]===tt&&done>0;
+        h+=`<td class="${ok?'cellc':'miss'}">${ABBR[tt]} ${ok?'<span class="ok">✓</span>':''}</td>`;}
       h+=`</tr>`;
     });
     h+=`</table>`;box.innerHTML=h;card.appendChild(box);wrap.appendChild(card);
@@ -553,40 +708,39 @@ function renderChampions(){
   ENT().forEach(p=>{
     let cls='none',mark='';
     if(p.champion){if(CHAMPION){cls=p.champion===CHAMPION?'correct':'wrong';mark=p.champion===CHAMPION?' ✓':' ✗';}else cls='';}
-    wrap.appendChild(el(`<div class="champ-row"><div class="who">${p.name}${p.guest?' <span class="chip joiner">joiner</span>':''}</div>
-      <div class="champ-pick ${cls}">${p.champion?flag(p.champion)+' '+p.champion+mark:'no pick'}</div></div>`));
+    wrap.appendChild(el(`<div class="champ-row"><div class="who">${pn(p.name)}${p.guest?` <span class="chip joiner">${t('joinerLabel')}</span>`:''}</div>
+      <div class="champ-pick ${cls}">${p.champion?flag(p.champion)+' '+nm(p.champion)+mark:t('noPick')}</div></div>`));
   });
   const bw=document.getElementById('brackets');bw.innerHTML='';
   ENT().forEach(p=>{
     const d=el(`<details class="box" data-name="${p.name}"></details>`);
-    const tag=p.guest?'<span class="chip joiner">joiner</span>':`<span class="chip ${p.knockoutCompleted?'full':'group'}">${p.knockoutCompleted?'Full bracket':'Group only'}</span>`;
-    let inner=`<summary>${p.name}${tag}<span class="caret">▸</span></summary><div class="boxbody">`;
+    const tag=p.guest?`<span class="chip joiner">${t('joinerLabel')}</span>`:`<span class="chip ${p.knockoutCompleted?'full':'group'}">${p.knockoutCompleted?t('fullBracket'):t('groupOnly')}</span>`;
+    let inner=`<summary>${pn(p.name)}${tag}<span class="caret">▸</span></summary><div class="boxbody">`;
     if(p.r32&&p.r32.length){
-      inner+=`<div class="mini" style="margin:4px 0 6px">ROUND OF 32 — winners picked</div>`;
-      p.r32.forEach(m=>{inner+=`<div class="match"><span class="dt">M${m[0]}</span><span class="pair">${m[1]} v ${m[2]}</span><span class="sc">${m[3]?ABBR[m[3]]:'—'}</span></div>`;});
+      inner+=`<div class="mini" style="margin:4px 0 6px">${t('r32').toUpperCase()}</div>`;
+      p.r32.forEach(m=>{inner+=`<div class="match"><span class="dt">M${m[0]}</span><span class="pair">${nm(m[1])} v ${nm(m[2])}</span><span class="sc">${m[3]?ABBR[m[3]]:'—'}</span></div>`;});
     }else if(p.guest&&p.ko&&Object.keys(p.ko).length){
-      const rounds=[["Round of 32",[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]],["Round of 16",[89,90,91,92,93,94,95,96]],["Quarter-finals",[97,98,99,100]],["Semi-finals",[101,102]]];
+      const rounds=[[t('r32'),[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]],[t('r16'),[89,90,91,92,93,94,95,96]],[t('qf'),[97,98,99,100]],[t('sf'),[101,102]]];
       rounds.forEach(([title,nums])=>{
         const picks=nums.filter(n=>p.ko[n]);
         if(!picks.length)return;
         inner+=`<div class="mini" style="margin:6px 0 4px">${title.toUpperCase()}</div>`;
-        picks.forEach(n=>{inner+=`<div class="match"><span class="dt">M${n}</span><span class="pair">${p.ko[n]}</span><span class="sc">✓</span></div>`;});
+        picks.forEach(n=>{inner+=`<div class="match"><span class="dt">M${n}</span><span class="pair">${nm(p.ko[n])}</span><span class="sc">✓</span></div>`;});
       });
-    }else inner+=`<div class="mini" style="padding:6px 0">Knockout bracket not filled in — group stage only.</div>`;
-    if(p.champion)inner+=`<div class="match"><span class="dt">🏆</span><span class="pair">Champion</span><span class="sc">${flag(p.champion)} ${p.champion}</span></div>`;
+    }else inner+=`<div class="mini" style="padding:6px 0">${t('bracketNotFilled')}</div>`;
+    if(p.champion)inner+=`<div class="match"><span class="dt">🏆</span><span class="pair">${t('championLabelKO')}</span><span class="sc">${flag(p.champion)} ${nm(p.champion)}</span></div>`;
     inner+=`</div>`;d.innerHTML=inner;bw.appendChild(d);
   });
 }
 
-/* ===== Results editor ===== */
 function renderEditor(){
   const wrap=document.getElementById('editGames');wrap.innerHTML='';
   GK.forEach(g=>{
     const done=GAMES[g].filter(played).length;
-    const d=el(`<details class="box"><summary>Group ${g}<span class="chip ${done===6?'full':'live'}">${done}/6</span><span class="caret">▸</span></summary></details>`);
+    const d=el(`<details class="box"><summary>${t('groupName',g)}<span class="chip ${done===6?'full':'live'}">${done}/6</span><span class="caret">▸</span></summary></details>`);
     const body=el(`<div class="boxbody"></div>`);
     GAMES[g].forEach((fx,i)=>{
-      const row=el(`<div class="ed-row"><span class="dt mini">${fx[2]}</span>
+      const row=el(`<div class="ed-row"><span class="dt mini">${dt(fx[2])}</span>
         <span class="pair"><span class="nm">${flag(fx[0])} ${ABBR[fx[0]]}</span></span></div>`);
       const ia=el(`<input type="number" min="0" inputmode="numeric" value="${fx[3]??''}">`);
       const dash=el(`<span class="mini">–</span>`);
@@ -600,52 +754,50 @@ function renderEditor(){
     d.appendChild(body);wrap.appendChild(d);
   });
   const cs=document.getElementById('editChampion');
-  cs.innerHTML=`<option value="">— not decided yet —</option>`+ALL_TEAMS.map(t=>`<option value="${t}" ${CHAMPION===t?'selected':''}>${t}</option>`).join('');
+  cs.innerHTML=`<option value="">${t('notDecided')}</option>`+ALL_TEAMS.map(tm=>`<option value="${tm}" ${CHAMPION===tm?'selected':''}>${nm(tm)}</option>`).join('');
   cs.onchange=()=>{CHAMPION=cs.value;};
 }
 
-/* ===== Tabs / actions ===== */
 function switchTab(name){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
   document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+name));
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.getElementById('nav').addEventListener('click',e=>{if(e.target.dataset.tab)switchTab(e.target.dataset.tab);});
-document.getElementById('saveBtn').addEventListener('click',()=>{persist();renderAll();toast('✅ Saved');switchTab('leaderboard');});
-document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm('Reset all scores to the official pre-loaded results and clear your edits?')){localStorage.removeItem(STORE_KEY);GAMES=JSON.parse(JSON.stringify(FIXTURES));CHAMPION="";renderAll();toast('Reset to official results');}});
+document.getElementById('saveBtn').addEventListener('click',()=>{persist();renderAll();toast(t('savedToast'));switchTab('leaderboard');});
+document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm(t('confirmReset'))){GAMES=JSON.parse(JSON.stringify(FIXTURES));CHAMPION="";renderAll();toast(t('resetToast'));}});
 
 function renderLeague(){
   const lab=document.getElementById('leagueLabel');
-  if(ACTIVE)lab.innerHTML=`<span class="lg-name">${ACTIVE.label}</span><span>${ENT().length} players</span><a href="./">switch league</a>`;
+  if(ACTIVE)lab.innerHTML=`<span class="lg-name">${t(ACTIVE.labelKey)}</span><span>${ENT().length} ${t('players')}</span><a href="./">${t('switchLeague')}</a>`;
 }
 function initChooser(){
-  document.getElementById('ch1').textContent=ROSTERS["1"].names.join(' · ');
-  document.getElementById('ch2').textContent=ROSTERS["2"].names.join(' · ');
+  document.getElementById('ch1').textContent=ROSTERS["1"].names.map(pn).join(' · ');
+  document.getElementById('ch2').textContent=ROSTERS["2"].names.map(pn).join(' · ');
   document.getElementById('chooser').classList.add('show');
 }
 
-/* ===== Join / Predict (guest entry) ===== */
 let DRAFT={picks:{},ko:{}};
 function remainingGroupGames(){const a=[];GK.forEach(g=>GAMES[g].forEach((fx,i)=>{if(!played(fx))a.push(gidx(g,i));}));return a;}
 function renderJoin(){
   if(!ACTIVE)return;
-  document.getElementById('joinTitle').textContent='Join '+ACTIVE.label+' & predict';
+  document.getElementById('joinTitle').textContent=t('predict');
   const wrap=document.getElementById('joinGames');wrap.innerHTML='';
   let any=false;
   GK.forEach(g=>{
     const upcoming=GAMES[g].map((fx,i)=>[fx,i]).filter(([fx])=>!played(fx));
     if(!upcoming.length)return;any=true;
-    const card=el(`<div class="card"><div class="grp-head"><span class="gname">Group ${g}</span><span class="mini">tap the winner</span></div></div>`);
+    const card=el(`<div class="card"><div class="grp-head"><span class="gname">${t('groupName',g)}</span><span class="mini">${t('tapWinner')}</span></div></div>`);
     upcoming.forEach(([fx,i])=>{
       const gi=gidx(g,i);
-      const row=el(`<div class="pick"><span class="dt mini">${fx[2]}</span><div class="opts"></div></div>`);
+      const row=el(`<div class="pick"><span class="dt mini">${dt(fx[2])}</span><div class="opts"></div></div>`);
       const opts=row.querySelector('.opts');
       [['A',fx[0]],['B',fx[1]]].forEach(([code,team])=>{
-        const b=el(`<button type="button" class="opt-btn ${DRAFT.picks[gi]===code?'sel':''}">${flag(team)} <span class="nm">${team}</span></button>`);
+        const b=el(`<button type="button" class="opt-btn ${DRAFT.picks[gi]===code?'sel':''}">${flag(team)} <span class="nm">${nm(team)}</span></button>`);
         b.addEventListener('click',()=>{
           if(DRAFT.picks[gi]===code)delete DRAFT.picks[gi];else DRAFT.picks[gi]=code;
           opts.querySelectorAll('.opt-btn').forEach((x,xi)=>x.classList.toggle('sel',DRAFT.picks[gi]===(xi===0?'A':'B')));
-          DRAFT.ko={}; renderKO(); // group change re-seeds the bracket
+          DRAFT.ko={};renderKO();
         });
         opts.appendChild(b);
       });
@@ -653,38 +805,38 @@ function renderJoin(){
     });
     wrap.appendChild(card);
   });
-  if(!any)wrap.innerHTML=`<div class="card"><p class="sub" style="margin:0">All group matches have been played — group standings are final. Pick the knockouts below.</p></div>`;
+  if(!any)wrap.innerHTML=`<div class="card"><p class="sub" style="margin:0">${t('groupCompleteEmpty')}</p></div>`;
   renderKO();
 }
 function renderKO(){
   const host=document.getElementById('joinKO');if(!host)return;host.innerHTML='';
   const rem=remainingGroupGames();const pk=rem.filter(gi=>DRAFT.picks[gi]).length;
-  const prog=document.getElementById('grpProgress');if(prog)prog.textContent=rem.length?`· ${pk}/${rem.length} games picked`:'· complete';
+  const prog=document.getElementById('grpProgress');if(prog)prog.textContent=rem.length?t('gamesPicked',pk,rem.length):t('groupsComplete');
   if(pk<rem.length){
-    host.innerHTML=`<div class="card"><p class="sub" style="margin:0">🔒 Pick all ${rem.length} remaining group games above to unlock the knockout bracket — ${rem.length-pk} to go. Your group tables then decide who advances and seed the Round of 32.</p></div>`;
+    host.innerHTML=`<div class="card"><p class="sub" style="margin:0">${t('bracketLock',rem.length,rem.length-pk)}</p></div>`;
     document.getElementById('champBanner').style.display='none';return;
   }
   const br=buildBracket(DRAFT.picks,DRAFT.ko);
-  if(!br.ready){host.innerHTML=`<div class="card"><p class="sub" style="margin:0">Finish the group stage to unlock.</p></div>`;return;}
-  KO_ROUNDS.forEach(([title,nums])=>{
-    const card=el(`<div class="card"><div class="grp-head"><span class="gname">${title}</span><span class="mini">tap the winner</span></div></div>`);
+  if(!br.ready){host.innerHTML=`<div class="card"><p class="sub" style="margin:0">${t('finishGroupsFirst')}</p></div>`;return;}
+  koRounds().forEach(([title,nums])=>{
+    const card=el(`<div class="card"><div class="grp-head"><span class="gname">${title}</span><span class="mini">${t('tapWinner')}</span></div></div>`);
     let shown=0;
     nums.forEach(n=>{
       const m=br.M[n];if(!m||!m.a||!m.b)return;shown++;
       const row=el(`<div class="pick"><span class="dt mini">${n===104?'🏆':'M'+n}</span><div class="opts"></div></div>`);
       const opts=row.querySelector('.opts');
       [m.a,m.b].forEach(team=>{
-        const b=el(`<button type="button" class="opt-btn ${DRAFT.ko[n]===team?'sel':''}">${flag(team)} <span class="nm">${team}</span></button>`);
+        const b=el(`<button type="button" class="opt-btn ${DRAFT.ko[n]===team?'sel':''}">${flag(team)} <span class="nm">${nm(team)}</span></button>`);
         b.addEventListener('click',()=>{if(DRAFT.ko[n]===team)delete DRAFT.ko[n];else DRAFT.ko[n]=team;renderKO();});
         opts.appendChild(b);
       });
       card.appendChild(row);
     });
-    if(!shown)card.appendChild(el(`<p class="sub" style="margin:0">Pick the previous round to reveal these matches.</p>`));
+    if(!shown)card.appendChild(el(`<p class="sub" style="margin:0">${t('pickPrevRound')}</p>`));
     host.appendChild(card);
   });
   const cb=document.getElementById('champBanner');
-  if(br.champion){cb.style.display='';document.getElementById('champDisplay').innerHTML=flag(br.champion)+' '+br.champion;}
+  if(br.champion){cb.style.display='';document.getElementById('champDisplay').innerHTML=flag(br.champion)+' '+nm(br.champion);}
   else cb.style.display='none';
 }
 function currentGuesser(){
@@ -699,46 +851,22 @@ document.getElementById('joinSubmitBtn').addEventListener('click',async ev=>{
   document.getElementById('joinNameWarn').style.display='none';
   upsertGuesser(g);renderAll();
   const btn=ev.currentTarget;const orig=btn.textContent;
-  btn.disabled=true;btn.textContent='Submitting…';
+  btn.disabled=true;btn.textContent=t('submitting');
   const payload={n:g.name,l:g.league,p:g.picks,k:g.ko,c:g.champion};
   const code=btoa(encodeURIComponent(JSON.stringify(payload)));
   try{
     const r=await fetch(SUBMIT_URL,{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},
       body:JSON.stringify({Name:g.name,League:g.league,Champion:g.champion||'(none)',Code:code,_subject:`WC2026 L${g.league} — ${g.name}`,_captcha:'false',_template:'box'})});
     if(!r.ok)throw new Error('HTTP '+r.status);
-    toast('✅ Submitted');switchTab('leaderboard');
-  }catch(e){toast('Network error — try again');}
+    toast(t('submitOk'));switchTab('leaderboard');
+  }catch(e){toast(t('submitErr'));}
   finally{btn.disabled=false;btn.textContent=orig;}
 });
-function importFromHash(){
-  if(!location.hash.startsWith('#join='))return;
-  try{
-    const payload=JSON.parse(decodeURIComponent(atob(location.hash.slice(6))));
-    if(payload&&payload.n&&payload.l){
-      upsertGuesser({name:payload.n,league:payload.l,guest:true,picks:payload.p||{},ko:payload.k||{},champion:payload.c||null});
-      setTimeout(()=>toast('Added '+payload.n+' to League '+payload.l),300);
-    }
-  }catch(e){}
-  history.replaceState(null,'',location.pathname+location.search);
-}
 
 function renderAll(){renderStatus();renderLeaderboard();renderMatches();renderGroups();renderChampions();renderEditor();renderJoin();}
 
-function restoreDraft(){
-  if(!ACTIVE)return;
-  if(Object.keys(DRAFT.picks).length||Object.keys(DRAFT.ko).length)return;
-  const mine=loadGuessers().filter(g=>g.league===PARAM);
-  if(mine.length!==1)return; // only auto-restore if there's exactly one local joiner
-  const saved=mine[0];
-  const inp=document.getElementById('joinName');if(inp&&!inp.value)inp.value=saved.name;
-  DRAFT.picks={...(saved.picks||{})};
-  DRAFT.ko={...(saved.ko||{})};
-}
 if(ACTIVE){
-  document.title='World Cup 2026 — '+ACTIVE.label;
-  importFromHash();
   renderLeague();renderAll();
-  restoreDraft();renderJoin();
   const params=new URLSearchParams(location.search);
   if(params.has('admin'))document.getElementById('navActuals').style.display='';
   if(params.has('guess'))switchTab('join');
