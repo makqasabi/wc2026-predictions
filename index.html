@@ -110,6 +110,17 @@
   .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;font-weight:600;opacity:0;transition:.25s;z-index:100;box-shadow:var(--shadow)}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
   .mini{font-size:11px;color:var(--muted);font-weight:600}
+  .league-label{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:#fff}
+  .league-label .lg-name{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.28);padding:4px 11px;border-radius:999px;font-weight:800;letter-spacing:.02em}
+  .league-label a{color:#fff;opacity:.8;text-decoration:underline;font-weight:600}
+  .chooser{position:fixed;inset:0;z-index:200;background:linear-gradient(180deg,var(--bg),var(--bg2));display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;color:#fff}
+  .chooser.show{display:flex}
+  .chooser .trophy{font-size:48px}
+  .chooser h1{margin:6px 0 2px;font-size:24px;font-weight:800}
+  .chooser p{margin:0 0 22px;opacity:.85;font-size:13.5px}
+  .chooser .opt{display:block;width:100%;max-width:420px;background:#fff;color:var(--ink);border-radius:16px;padding:16px 18px;margin-bottom:14px;text-decoration:none;box-shadow:var(--shadow);text-align:left}
+  .chooser .opt b{font-size:16px;display:block;margin-bottom:4px}
+  .chooser .opt span{font-size:12px;color:var(--muted);line-height:1.4}
 </style>
 </head>
 <body>
@@ -118,7 +129,16 @@
   <h1>World Cup 2026</h1>
   <p>Predictions vs Live Actuals</p>
   <div class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusText">Loading…</span></div>
+  <div class="league-label" id="leagueLabel"></div>
 </header>
+
+<div class="chooser" id="chooser">
+  <div class="trophy">🏆</div>
+  <h1>World Cup 2026</h1>
+  <p>Choose your league</p>
+  <a class="opt" href="?g=1"><b>🟢 League 1</b><span id="ch1"></span></a>
+  <a class="opt" href="?g=2"><b>🔵 League 2</b><span id="ch2"></span></a>
+</div>
 
 <nav id="nav">
   <button data-tab="leaderboard" class="active">🏅 Leaderboard</button>
@@ -231,6 +251,15 @@ const PREDICTIONS=[
  {name:"Tariq Othman Tariq",champion:"France",knockoutCompleted:true,groups:{A:["South Korea","Mexico","Czech Republic","South Africa"],B:["Switzerland","Bosnia-Herzegovina","Canada","Qatar"],C:["Morocco","Brazil","Scotland","Haiti"],D:["Turkey","Australia","USA","Paraguay"],E:["Germany","Ivory Coast","Ecuador","Curacao"],F:["Japan","Netherlands","Sweden","Tunisia"],G:["Belgium","Iran","Egypt","New Zealand"],H:["Spain","Uruguay","Saudi Arabia","Cape Verde"],I:["France","Norway","Senegal","Iraq"],J:["Argentina","Algeria","Austria","Jordan"],K:["Portugal","Colombia","DR Congo","Uzbekistan"],L:["England","Croatia","Ghana","Panama"]},thirdPlace:["USA","Ecuador","Sweden","Egypt","Saudi Arabia","Senegal","DR Congo","Ghana"],r32:[[73,"Mexico","Bosnia-Herzegovina","Mexico"],[74,"Germany","USA","Germany"],[75,"Japan","Brazil","Japan"],[76,"Morocco","Netherlands","Morocco"],[77,"France","Sweden","France"],[78,"Ivory Coast","Norway","Norway"],[79,"South Korea","Ecuador","South Korea"],[80,"England","DR Congo","England"],[81,"Turkey","Senegal","Senegal"],[82,"Belgium","Saudi Arabia","Belgium"],[83,"Colombia","Croatia","Colombia"],[84,"Spain","Algeria","Spain"],[85,"Switzerland","Egypt","Switzerland"],[86,"Argentina","Uruguay","Argentina"],[87,"Portugal","Ghana","Portugal"],[88,"Australia","Iran","Iran"]]}
 ];
 
+/* ===== Leagues (two friend groups; share a link per league) ===== */
+const ROSTERS={
+ "1":{label:"League 1",names:["Tamim","Mohsen","Bader","Naser","Thamer","Ahmed Esam"]},
+ "2":{label:"League 2",names:["Othman Tariq","Abdulrahman Othman Tariq","Mohammad Saad","Salman Othman Tariq","Tariq Othman Tariq","Mohsen"]}
+};
+const PARAM=new URLSearchParams(location.search).get('g');
+const ACTIVE=ROSTERS[PARAM]||null;
+const ROSTER=ACTIVE?PREDICTIONS.filter(p=>ACTIVE.names.includes(p.name)):PREDICTIONS;
+
 /* ===== State: results live in a working copy of FIXTURES, overridable via localStorage ===== */
 const STORE_KEY="wc2026_v2";
 let CHAMPION="";
@@ -297,7 +326,7 @@ function renderStatus(){
 
 function renderLeaderboard(){
   const n=gamesPlayed();
-  const rows=PREDICTIONS.map(p=>({p,s:scoreOf(p)})).sort((a,b)=>b.s.total-a.s.total||b.s.correct-a.s.correct||a.p.name.localeCompare(b.p.name));
+  const rows=ROSTER.map(p=>({p,s:scoreOf(p)})).sort((a,b)=>b.s.total-a.s.total||b.s.correct-a.s.correct||a.p.name.localeCompare(b.p.name));
   const max=Math.max(1,...rows.map(r=>r.s.total));
   document.getElementById('lbSub').textContent=n? `Live — ${n}/72 group games played. Ranked by total points.` : 'No results yet.';
   const wrap=document.getElementById('leaderboard');wrap.innerHTML='';
@@ -332,7 +361,7 @@ function renderMatches(){
       else h+=`<td class="mini">—</td>`;
     });
     h+=`</tr>`;
-    PREDICTIONS.forEach(p=>{
+    ROSTER.forEach(p=>{
       h+=`<tr><td class="who">${p.name}</td>`;
       fxs.forEach(fx=>{
         const pw=predWinner(p,g,fx[0],fx[1]);
@@ -357,7 +386,7 @@ function renderGroups(){
     h+=`<tr class="actualrow"><td class="who">✅ ${complete?'Final':'Live'}</td>`;
     st.forEach(s=>{h+=`<td>${flag(s.t)} ${ABBR[s.t]}<div class="mini">${s.pts}p</div></td>`;});
     h+=`</tr>`;
-    PREDICTIONS.forEach(p=>{
+    ROSTER.forEach(p=>{
       h+=`<tr><td class="who">${p.name}</td>`;
       for(let i=0;i<4;i++){const t=p.groups[g][i];const ok=fin[i]===t&&done>0;
         h+=`<td class="${ok?'cellc':'miss'}">${ABBR[t]} ${ok?'<span class="ok">✓</span>':''}</td>`;}
@@ -369,14 +398,14 @@ function renderGroups(){
 
 function renderChampions(){
   const wrap=document.getElementById('champions');wrap.innerHTML='';
-  PREDICTIONS.forEach(p=>{
+  ROSTER.forEach(p=>{
     let cls='none',mark='';
     if(p.champion){if(CHAMPION){cls=p.champion===CHAMPION?'correct':'wrong';mark=p.champion===CHAMPION?' ✓':' ✗';}else cls='';}
     wrap.appendChild(el(`<div class="champ-row"><div class="who">${p.name}</div>
       <div class="champ-pick ${cls}">${p.champion?flag(p.champion)+' '+p.champion+mark:'no pick (group stage only)'}</div></div>`));
   });
   const bw=document.getElementById('brackets');bw.innerHTML='';
-  PREDICTIONS.forEach(p=>{
+  ROSTER.forEach(p=>{
     const d=el(`<details class="box" data-name="${p.name}"></details>`);
     let inner=`<summary>${p.name}<span class="chip ${p.knockoutCompleted?'full':'group'}">${p.knockoutCompleted?'Full bracket':'Group only'}</span><span class="caret">▸</span></summary><div class="boxbody">`;
     if(p.r32&&p.r32.length){
@@ -424,8 +453,19 @@ document.getElementById('nav').addEventListener('click',e=>{if(e.target.dataset.
 document.getElementById('saveBtn').addEventListener('click',()=>{persist();renderAll();toast('✅ Saved');switchTab('leaderboard');});
 document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm('Reset all scores to the official pre-loaded results and clear your edits?')){localStorage.removeItem(STORE_KEY);GAMES=JSON.parse(JSON.stringify(FIXTURES));CHAMPION="";renderAll();toast('Reset to official results');}});
 
+function renderLeague(){
+  const lab=document.getElementById('leagueLabel');
+  if(ACTIVE)lab.innerHTML=`<span class="lg-name">${ACTIVE.label}</span><span>${ROSTER.length} players</span><a href="./">switch league</a>`;
+}
+function initChooser(){
+  document.getElementById('ch1').textContent=ROSTERS["1"].names.join(' · ');
+  document.getElementById('ch2').textContent=ROSTERS["2"].names.join(' · ');
+  document.getElementById('chooser').classList.add('show');
+}
 function renderAll(){renderStatus();renderLeaderboard();renderMatches();renderGroups();renderChampions();renderEditor();}
-renderAll();
+
+if(ACTIVE){document.title='World Cup 2026 — '+ACTIVE.label;renderLeague();renderAll();}
+else{initChooser();}
 </script>
 </body>
 </html>

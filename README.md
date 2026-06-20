@@ -24,7 +24,20 @@ Real group-stage results are baked in (sourced from Wikipedia) and standings/thi
 
 Knockout matchups are seeded by each person's own group predictions, so they differ per entrant — match picks, group tables, third-place picks and champion are the comparable, scored fields. Full brackets are shown for reference.
 
-## Entrants
+## Two leagues (separate links)
+
+The site splits into two friend groups via a URL parameter (one shared file, so results stay in sync):
+
+- **League 1** — `?g=1` — Tamim, Mohsen, Bader, Naser, Thamer, Ahmed Esam
+- **League 2** — `?g=2` — Othman Tariq, Abdulrahman Othman Tariq, Mohammad Saad, Salman Othman Tariq, Tariq Othman Tariq, Mohsen
+
+Live links:
+- League 1 → https://makqasabi.github.io/wc2026-predictions/?g=1
+- League 2 → https://makqasabi.github.io/wc2026-predictions/?g=2
+
+The bare URL (no `?g=`) shows a league chooser. Mohsen appears in both.
+
+## Entrants (all)
 
 Abdulrahman Othman Tariq · Ahmed Esam · Bader · Mohammad Saad · Mohsen · Naser · Othman Tariq · Salman Othman Tariq · Tamim · Tariq Othman Tariq · Thamer
 
