@@ -205,6 +205,11 @@
 <main>
   <section class="panel active" id="panel-leaderboard">
     <div class="card">
+      <h2><span data-i18n="fairHeading">⚖️ Level playing field</span> <span class="mini" data-i18n="fairSubtitle">· same games for everyone</span></h2>
+      <p class="sub" id="fairSub"></p>
+      <div id="fairBoard"></div>
+    </div>
+    <div class="card">
       <h2 data-i18n="predictorsHeading">🏅 Predictors</h2>
       <p class="sub" id="lbSub"></p>
       <div id="leaderboard"></div>
@@ -363,6 +368,9 @@ const T_EN={
   championLabelKO:"Champion",
   rankedSummary:n=>`${n} ranked · correct picks ÷ picks on played games`,
   accEmpty:"Once games are played and players have made picks, accuracy will show here.",
+  fairHeading:"⚖️ Level playing field", fairSubtitle:"· same games for everyone",
+  fairRanked:n=>`${n} ranked · group games from Jun 20 onward — everyone predicted these exact games`,
+  fairEmpty:"The fair race begins with the Jun 20 games. Once those results are in, early and new joiners are ranked on the exact same matches — a true like-for-like comparison.",
   langSwitch:"عربي"
 };
 
@@ -431,6 +439,9 @@ const T_AR={
   championLabelKO:"البطل",
   rankedSummary:n=>`${n} مرتبين · التوقعات الصحيحة ÷ التوقعات على المباريات المُلعبة`,
   accEmpty:"ستظهر الدقة هنا بعد لعب المباريات وإجراء التوقعات.",
+  fairHeading:"⚖️ تكافؤ الفرص", fairSubtitle:"· نفس المباريات للجميع",
+  fairRanked:n=>`${n} مرتبين · مباريات المجموعات من 20 يونيو فصاعداً — الجميع توقّع هذه المباريات نفسها`,
+  fairEmpty:"تبدأ المنافسة العادلة مع مباريات 20 يونيو. عند توفّر نتائجها، يُقارَن المشاركون القدامى والجدد على نفس المباريات تماماً — مقارنة عادلة بالكامل.",
   langSwitch:"EN"
 };
 const TR=LANG==='ar'?T_AR:T_EN;
@@ -613,6 +624,20 @@ function guesserOrderStats(picks,g){
   return Object.values(st).sort((x,y)=>y.pts-x.pts||y.gd-x.gd||y.gf-x.gf||x.seed-y.seed);
 }
 
+/* Fair window = group games still unplayed when joining opened (Jun 20 onward).
+   Everyone — early + new joiners — predicted these exact games, so it's like-for-like. */
+const MO={Jun:6,Jul:7};
+function fairGame(fx){const[m,day]=fx[2].split(' ');return (MO[m]*100+parseInt(day,10))>=620;}
+function fairScore(p){
+  let c=0,d=0;
+  GK.forEach(g=>GAMES[g].forEach((fx,i)=>{
+    if(!fairGame(fx)||!played(fx))return;
+    const pw=entryPick(p,g,i,fx[0],fx[1]);if(pw===null)return;
+    d++;const aw=winnerOf(fx);if(aw!=="DRAW"&&pw===aw)c++;
+  }));
+  return {c,d};
+}
+
 function scoreOf(p){
   let match=0,correct=0,decided=0,posPts=0,third=0,champ=0;
   GK.forEach(g=>{
@@ -660,7 +685,29 @@ function renderLeaderboard(){
     row.addEventListener('click',()=>{switchTab('champions');const d=document.querySelector(`details.box[data-name="${CSS.escape(r.p.name)}"]`);if(d){d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});}});
     wrap.appendChild(row);
   });
+  renderFair();
   renderAccuracy();
+}
+function renderFair(){
+  const all=ENT().map(p=>({p,s:fairScore(p)})).filter(r=>r.s.d>0);
+  const wrap=document.getElementById('fairBoard');wrap.innerHTML='';
+  const sub=document.getElementById('fairSub');
+  if(!all.length){sub.textContent=t('fairEmpty');return;}
+  all.forEach(r=>{r.acc=r.s.c/r.s.d;});
+  all.sort((a,b)=>b.acc-a.acc||b.s.d-a.s.d||a.p.name.localeCompare(b.p.name));
+  sub.textContent=t('fairRanked',all.length);
+  all.forEach((r,i)=>{
+    const rk=i+1;const pct=Math.round(r.acc*100);
+    const row=el(`<div class="lb-row">
+      <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
+      <div class="lb-name">${pn(r.p.name)}${r.p.guest?` <span class="chip joiner">${t('joinerLabel')}</span>`:''}
+        <small>${t('correctLabel',r.s.c,r.s.d)}</small>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="lb-score">${pct}%<small>${t('acc')}</small></div>
+    </div>`);
+    wrap.appendChild(row);
+  });
 }
 function renderAccuracy(){
   const all=ENT().map(p=>({p,s:scoreOf(p)})).filter(r=>r.s.decided>0);
