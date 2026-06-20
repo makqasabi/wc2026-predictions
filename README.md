@@ -5,20 +5,24 @@ A mobile-first web page comparing the FMVA group's **FIFA World Cup 2026 Predict
 
 ## What it does
 
-- **Leaderboard** — ranks all 8 entrants by points, updating live as results are entered.
-- **Group Stage** — side-by-side comparison of every group table (A–L) vs the actual finishing order; correct positions get a ✓.
+- **Leaderboard** — ranks all entrants by points, updating live.
+- **Match Picks** — every group game with its real scoreline, and each person's predicted winner per match (green ✓ correct / red ✗ wrong / grey not yet played). Match picks are derived from each person's group ranking (the higher-ranked team is their predicted winner of that head-to-head).
+- **Group Tables** — live, auto-computed standings (from results) vs each person's predicted finishing order.
 - **Knockouts** — each person's champion pick (turns green/red once decided) and full Round-of-32 bracket.
-- **Enter Results** — tap-friendly editor to record actual group standings, the 8 best third-place qualifiers, and the champion. Results are saved in the browser (on-device).
+- **Results** — tap-friendly editor with the **real group results pre-loaded**; edit any scoreline (and the champion) as the tournament progresses. Edits are saved on-device and override the defaults; "Reset to official results" restores them.
+
+Real group-stage results are baked in (sourced from Wikipedia) and standings/third-place qualifiers are computed automatically.
 
 ## Scoring
 
-| Field | Points |
-|---|---|
-| Each team in its exact final group position (48 slots) | +3 |
-| Each correct best third-place qualifier (8 picks) | +4 |
-| Correct World Cup champion | +25 |
+| Field | Points | When |
+|---|---|---|
+| Correct match result (per group game) | +3 | live |
+| Each team in its exact final group position | +3 | locks when a group finishes all 6 games |
+| Each correct best third-place qualifier | +4 | end of group stage |
+| Correct World Cup champion | +25 | final |
 
-Knockout matchups are seeded by each person's own group predictions, so they differ per entrant — the group tables, third-place picks and champion are the comparable, scored fields. Full brackets are shown for reference.
+Knockout matchups are seeded by each person's own group predictions, so they differ per entrant — match picks, group tables, third-place picks and champion are the comparable, scored fields. Full brackets are shown for reference.
 
 ## Entrants
 
