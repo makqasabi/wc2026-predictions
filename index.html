@@ -302,16 +302,11 @@ const PARAM=new URLSearchParams(location.search).get('g');
 const ACTIVE=ROSTERS[PARAM]||null;
 const ROSTER=ACTIVE?PREDICTIONS.filter(p=>ACTIVE.names.includes(p.name)):PREDICTIONS;
 
-/* ===== State: results live in a working copy of FIXTURES, overridable via localStorage ===== */
-const STORE_KEY="wc2026_v2";
+/* ===== State: working copies, session-only (no persistence). Wipe any legacy local data. ===== */
+try{localStorage.removeItem("wc2026_v2");localStorage.removeItem("wc2026_guessers");}catch(e){}
 let CHAMPION="";
-let GAMES=JSON.parse(JSON.stringify(FIXTURES)); // working copy
-(function loadStore(){
-  try{const s=JSON.parse(localStorage.getItem(STORE_KEY));
-    if(s){if(s.games)GAMES=s.games;if(typeof s.champion==='string')CHAMPION=s.champion;}
-  }catch(e){}
-})();
-function persist(){localStorage.setItem(STORE_KEY,JSON.stringify({games:GAMES,champion:CHAMPION}));}
+let GAMES=JSON.parse(JSON.stringify(FIXTURES));
+function persist(){} // no-op; reload always returns to the baked-in official results
 
 /* ===== Helpers ===== */
 function flag(t){const c=ISO[t]||"";return `<img class="flag" loading="lazy" alt="" src="https://flagcdn.com/w40/${c}.png" onerror="this.style.visibility='hidden'">`;}
@@ -325,11 +320,11 @@ function entryPick(p,g,i,a,b){
   if(p.groups){const o=p.groups[g];return o.indexOf(a)<o.indexOf(b)?a:b;}
   const v=p.picks&&p.picks[gidx(g,i)];return v==='A'?a:(v==='B'?b:null);
 }
-/* Guest guessers stored on-device (and importable via shared link) */
-const GUESS_KEY="wc2026_guessers";
-function loadGuessers(){try{return JSON.parse(localStorage.getItem(GUESS_KEY))||[];}catch(e){return[];}}
-function saveGuessers(arr){localStorage.setItem(GUESS_KEY,JSON.stringify(arr));}
-function upsertGuesser(g){const arr=loadGuessers();const i=arr.findIndex(x=>x.league===g.league&&x.name.toLowerCase()===g.name.toLowerCase());if(i>=0)arr[i]=g;else arr.push(g);saveGuessers(arr);}
+/* Session-only runtime joiners (cleared on reload — only BAKED_GUESSERS persist). */
+const RUNTIME_GUESSERS=[];
+function loadGuessers(){return RUNTIME_GUESSERS;}
+function saveGuessers(){} // no-op
+function upsertGuesser(g){const i=RUNTIME_GUESSERS.findIndex(x=>x.league===g.league&&x.name.toLowerCase()===g.name.toLowerCase());if(i>=0)RUNTIME_GUESSERS[i]=g;else RUNTIME_GUESSERS.push(g);}
 /* Joiners baked into the site (submitted via the form, added by the maintainer). */
 const BAKED_GUESSERS=[];
 /* Active entrants for the current league = baked roster + baked guests + local-only guests. */
