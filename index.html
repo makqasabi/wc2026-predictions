@@ -660,10 +660,10 @@ function renderMatches(){
     card.innerHTML=`<div class="grp-head"><span class="gname">${t('groupName',g)}</span><span class="chip ${done===6?'full':'live'}">${t('played',done)}</span></div>`;
     const box=el(`<div class="tablebox"></div>`);
     let h=`<table class="cmp"><tr><th class="who">${t('gameLabel')}</th>`;
-    fxs.forEach(fx=>{h+=`<th>${ABBR[fx[0]]}–${ABBR[fx[1]]}<div class="mini">${dt(fx[2])}</div></th>`;});
+    fxs.forEach(fx=>{h+=`<th>${flag(fx[0])} ${ABBR[fx[0]]}–${flag(fx[1])} ${ABBR[fx[1]]}<div class="mini">${dt(fx[2])}</div></th>`;});
     h+=`</tr><tr class="actualrow"><td class="who">${t('resultRow')}</td>`;
     fxs.forEach(fx=>{
-      if(played(fx)){const w=winnerOf(fx);h+=`<td class="score">${fx[3]}–${fx[4]}<div class="mini">${w==="DRAW"?t('draw'):ABBR[w]+t('winSuffix')}</div></td>`;}
+      if(played(fx)){const w=winnerOf(fx);h+=`<td class="score">${fx[3]}–${fx[4]}<div class="mini">${w==="DRAW"?t('draw'):flag(w)+' '+ABBR[w]+t('winSuffix')}</div></td>`;}
       else h+=`<td class="mini">—</td>`;
     });
     h+=`</tr>`;
@@ -672,9 +672,9 @@ function renderMatches(){
       fxs.forEach((fx,i)=>{
         const pw=entryPick(p,g,i,fx[0],fx[1]);
         if(pw===null){h+=`<td class="mini">—</td>`;}
-        else if(!played(fx)){h+=`<td class="miss">${ABBR[pw]}</td>`;}
+        else if(!played(fx)){h+=`<td class="miss">${flag(pw)} ${ABBR[pw]}</td>`;}
         else{const aw=winnerOf(fx);const ok=aw!=="DRAW"&&pw===aw;
-          h+=`<td class="${ok?'cellc':'cellw'}">${ABBR[pw]} ${ok?'<span class="ok">✓</span>':'<span style="color:var(--red)">✗</span>'}</td>`;}
+          h+=`<td class="${ok?'cellc':'cellw'}">${flag(pw)} ${ABBR[pw]} ${ok?'<span class="ok">✓</span>':'<span style="color:var(--red)">✗</span>'}</td>`;}
       });
       h+=`</tr>`;
     });
@@ -696,7 +696,7 @@ function renderGroups(){
     ENT().filter(p=>p.groups).forEach(p=>{
       h+=`<tr><td class="who">${pn(p.name)}</td>`;
       for(let i=0;i<4;i++){const tt=p.groups[g][i];const ok=fin[i]===tt&&done>0;
-        h+=`<td class="${ok?'cellc':'miss'}">${ABBR[tt]} ${ok?'<span class="ok">✓</span>':''}</td>`;}
+        h+=`<td class="${ok?'cellc':'miss'}">${flag(tt)} ${ABBR[tt]} ${ok?'<span class="ok">✓</span>':''}</td>`;}
       h+=`</tr>`;
     });
     h+=`</table>`;box.innerHTML=h;card.appendChild(box);wrap.appendChild(card);
@@ -718,14 +718,14 @@ function renderChampions(){
     let inner=`<summary>${pn(p.name)}${tag}<span class="caret">▸</span></summary><div class="boxbody">`;
     if(p.r32&&p.r32.length){
       inner+=`<div class="mini" style="margin:4px 0 6px">${t('r32').toUpperCase()}</div>`;
-      p.r32.forEach(m=>{inner+=`<div class="match"><span class="dt">M${m[0]}</span><span class="pair">${nm(m[1])} v ${nm(m[2])}</span><span class="sc">${m[3]?ABBR[m[3]]:'—'}</span></div>`;});
+      p.r32.forEach(m=>{inner+=`<div class="match"><span class="dt">M${m[0]}</span><span class="pair">${flag(m[1])} ${nm(m[1])} v ${flag(m[2])} ${nm(m[2])}</span><span class="sc">${m[3]?flag(m[3])+' '+ABBR[m[3]]:'—'}</span></div>`;});
     }else if(p.guest&&p.ko&&Object.keys(p.ko).length){
       const rounds=[[t('r32'),[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]],[t('r16'),[89,90,91,92,93,94,95,96]],[t('qf'),[97,98,99,100]],[t('sf'),[101,102]]];
       rounds.forEach(([title,nums])=>{
         const picks=nums.filter(n=>p.ko[n]);
         if(!picks.length)return;
         inner+=`<div class="mini" style="margin:6px 0 4px">${title.toUpperCase()}</div>`;
-        picks.forEach(n=>{inner+=`<div class="match"><span class="dt">M${n}</span><span class="pair">${nm(p.ko[n])}</span><span class="sc">✓</span></div>`;});
+        picks.forEach(n=>{inner+=`<div class="match"><span class="dt">M${n}</span><span class="pair">${flag(p.ko[n])} ${nm(p.ko[n])}</span><span class="sc">✓</span></div>`;});
       });
     }else inner+=`<div class="mini" style="padding:6px 0">${t('bracketNotFilled')}</div>`;
     if(p.champion)inner+=`<div class="match"><span class="dt">🏆</span><span class="pair">${t('championLabelKO')}</span><span class="sc">${flag(p.champion)} ${nm(p.champion)}</span></div>`;
