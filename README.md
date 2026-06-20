@@ -50,7 +50,7 @@ A guest predicts the **whole tournament, progressively**:
 3. The **Round of 32 is auto-seeded** from those standings using the official WC2026 bracket template (incl. third-place allocation).
 4. Pick knockout winners round by round — each round's matchups come from the previous round's picks — through to the **final, which sets their champion** (+25).
 
-Their picks save on-device and they appear as a **guest** on that league's board. "Copy my shareable link" produces a `#join=…` link encoding the full bracket — when anyone opens it, that guest is added to their board too. (No backend: this is the static-hosting way to let guests join. A live shared board would need a database, e.g. Firebase.)
+Their picks save on-device. To appear on everyone's board, they tap **"📤 Send predictions to organizer (WhatsApp)"** — WhatsApp opens with their encoded predictions pre-filled, addressed to the organizer's number. The organizer forwards the code to the developer, who bakes the joiner into the site and pushes — then everyone sees them.
 
 ## Entrants (all)
 
