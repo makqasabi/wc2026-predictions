@@ -330,11 +330,7 @@ function loadGuessers(){try{return JSON.parse(localStorage.getItem(GUESS_KEY))||
 function saveGuessers(arr){localStorage.setItem(GUESS_KEY,JSON.stringify(arr));}
 function upsertGuesser(g){const arr=loadGuessers();const i=arr.findIndex(x=>x.league===g.league&&x.name.toLowerCase()===g.name.toLowerCase());if(i>=0)arr[i]=g;else arr.push(g);saveGuessers(arr);}
 /* Joiners baked into the site (submitted via the form, added by the maintainer). */
-const BAKED_GUESSERS=[
- {name:"test2",league:"1",guest:true,champion:"France",
-  picks:{"4":"A","5":"B","10":"B","11":"A","16":"B","17":"A","22":"B","23":"B","26":"A","27":"A","28":"B","29":"B","32":"A","33":"B","34":"A","35":"B","38":"A","39":"B","40":"A","41":"B","44":"A","45":"A","46":"B","47":"B","50":"A","51":"A","52":"B","53":"A","56":"A","57":"B","58":"B","59":"B","62":"A","63":"A","64":"B","65":"B","68":"A","69":"B","70":"B","71":"A"},
-  ko:{"73":"South Korea","74":"Germany","75":"Morocco","76":"Brazil","77":"France","78":"Norway","79":"Mexico","80":"England","81":"Bosnia-Herzegovina","82":"Belgium","83":"Croatia","84":"Spain","85":"Canada","86":"Uruguay","87":"Portugal","88":"Egypt","89":"France","90":"Morocco","91":"Brazil","92":"England","93":"Spain","94":"Belgium","95":"Uruguay","96":"Portugal","97":"France","98":"Spain","99":"Brazil","100":"Portugal","101":"France","102":"Brazil","104":"France"}}
-];
+const BAKED_GUESSERS=[];
 /* Active entrants for the current league = baked roster + baked guests + local-only guests. */
 function ENT(){
   const local=loadGuessers().filter(x=>!PARAM||x.league===PARAM);
