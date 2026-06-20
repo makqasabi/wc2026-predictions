@@ -44,7 +44,13 @@ New people can predict the **upcoming (not-yet-played) matches** + champion and 
 - Join League 1 → https://makqasabi.github.io/wc2026-predictions/?g=1&guess
 - Join League 2 → https://makqasabi.github.io/wc2026-predictions/?g=2&guess
 
-A guest picks the winners of remaining games (+3 each once played) and a champion (+25). Their picks save on-device and they appear as a **guest** on that league's board. The "Copy my shareable link" button produces a `#join=…` link encoding their picks — when anyone opens it, that guest is added to their board too. (No backend: this is the static-hosting way to let guests join. A live shared board would need a database, e.g. Firebase.)
+A guest predicts the **whole tournament, progressively**:
+1. Pick the winners of every remaining group game (+3 each once played).
+2. Those picks (plus real results so far) decide each group's final table — top 2 + best 8 third-placed advance.
+3. The **Round of 32 is auto-seeded** from those standings using the official WC2026 bracket template (incl. third-place allocation).
+4. Pick knockout winners round by round — each round's matchups come from the previous round's picks — through to the **final, which sets their champion** (+25).
+
+Their picks save on-device and they appear as a **guest** on that league's board. "Copy my shareable link" produces a `#join=…` link encoding the full bracket — when anyone opens it, that guest is added to their board too. (No backend: this is the static-hosting way to let guests join. A live shared board would need a database, e.g. Firebase.)
 
 ## Entrants (all)
 
