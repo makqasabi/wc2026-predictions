@@ -769,7 +769,7 @@ document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm(t('
 
 function renderLeague(){
   const lab=document.getElementById('leagueLabel');
-  if(ACTIVE)lab.innerHTML=`<span class="lg-name">${t(ACTIVE.labelKey)}</span><span>${ENT().length} ${t('players')}</span>`;
+  if(lab)lab.innerHTML='';
 }
 function initChooser(){
   document.getElementById('ch1').textContent=ROSTERS["1"].names.map(pn).join(' · ');
