@@ -121,6 +121,14 @@
   .chooser .opt{display:block;width:100%;max-width:420px;background:#fff;color:var(--ink);border-radius:16px;padding:16px 18px;margin-bottom:14px;text-decoration:none;box-shadow:var(--shadow);text-align:left}
   .chooser .opt b{font-size:16px;display:block;margin-bottom:4px}
   .chooser .opt span{font-size:12px;color:var(--muted);line-height:1.4}
+  .pick{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .pick:last-child{border-bottom:none}
+  .pick .dt{width:42px;flex:0 0 auto}
+  .pick .opts{flex:1;display:flex;gap:6px}
+  .pick .opt-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 6px;font-size:12.5px;font-weight:700;cursor:pointer;min-width:0}
+  .pick .opt-btn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pick .opt-btn.sel{background:var(--green);border-color:var(--green);color:#fff}
+  .chip.guest{background:#ede9fe;color:#5b21b6}
 </style>
 </head>
 <body>
@@ -145,6 +153,7 @@
   <button data-tab="matches">⚽ Match Picks</button>
   <button data-tab="groups">📊 Group Tables</button>
   <button data-tab="champions">👑 Knockouts</button>
+  <button data-tab="join">➕ Join / Predict</button>
   <button data-tab="actuals">✏️ Results</button>
 </nav>
 
@@ -188,6 +197,23 @@
       <p class="sub">Round-of-32 winners each person picked. Some completed the whole bracket; others stopped after the group stage.</p>
       <div id="brackets"></div>
     </div>
+  </section>
+
+  <section class="panel" id="panel-join">
+    <div class="card">
+      <h2 id="joinTitle">Join & predict</h2>
+      <p class="sub">Pick the winners of the matches that haven't been played yet. You'll be ranked against everyone on the remaining games (+3 per correct result) and the champion (+25). Pick as many or as few as you like.</p>
+      <input id="joinName" placeholder="Your name" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-family:inherit;font-size:15px;margin-bottom:6px">
+      <div id="joinNameWarn" class="mini" style="color:var(--red);display:none">Enter your name first.</div>
+    </div>
+    <div id="joinGames"></div>
+    <div class="card">
+      <h2>Your champion pick <span class="mini">(optional)</span></h2>
+      <select id="joinChampion"><option value="">— no pick —</option></select>
+    </div>
+    <div class="btn-row"><button class="btn primary" id="joinSaveBtn">✅ Save my picks &amp; see standing</button></div>
+    <div class="btn-row"><button class="btn ghost" id="joinShareBtn">🔗 Copy my shareable link</button></div>
+    <p class="sub" style="margin-top:10px">Your picks save on this device and you'll appear on the leaderboard. Tap <b>Copy my shareable link</b> and send it to the group — when they open it, you're added to their board too.</p>
   </section>
 
   <section class="panel" id="panel-actuals">
@@ -277,7 +303,19 @@ function el(h){const t=document.createElement('template');t.innerHTML=h.trim();r
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
 function played(fx){return fx[3]!==null&&fx[3]!==undefined&&fx[4]!==null&&fx[4]!==undefined;}
 function winnerOf(fx){if(!played(fx))return null;if(fx[3]>fx[4])return fx[0];if(fx[4]>fx[3])return fx[1];return "DRAW";}
-function predWinner(p,g,a,b){const o=p.groups[g];return o.indexOf(a)<o.indexOf(b)?a:b;}
+function gidx(g,i){return GK.indexOf(g)*6+i;}
+/* Predicted winner of a fixture for any entrant: baked entrant uses group ranking; guest uses explicit pick (null = not picked). */
+function entryPick(p,g,i,a,b){
+  if(p.groups){const o=p.groups[g];return o.indexOf(a)<o.indexOf(b)?a:b;}
+  const v=p.picks&&p.picks[gidx(g,i)];return v==='A'?a:(v==='B'?b:null);
+}
+/* Guest guessers stored on-device (and importable via shared link) */
+const GUESS_KEY="wc2026_guessers";
+function loadGuessers(){try{return JSON.parse(localStorage.getItem(GUESS_KEY))||[];}catch(e){return[];}}
+function saveGuessers(arr){localStorage.setItem(GUESS_KEY,JSON.stringify(arr));}
+function upsertGuesser(g){const arr=loadGuessers();const i=arr.findIndex(x=>x.league===g.league&&x.name.toLowerCase()===g.name.toLowerCase());if(i>=0)arr[i]=g;else arr.push(g);saveGuessers(arr);}
+/* Active entrants for the current league = baked roster + guests joined to this league */
+function ENT(){const gs=loadGuessers().filter(x=>!PARAM||x.league===PARAM);return ROSTER.concat(gs);}
 function gamesPlayed(){let n=0;GK.forEach(g=>GAMES[g].forEach(fx=>{if(played(fx))n++;}));return n;}
 function groupComplete(g){return GAMES[g].every(played);}
 
@@ -302,15 +340,17 @@ function thirdQualifiers(){
 function scoreOf(p){
   let match=0,correct=0,decided=0,posPts=0,third=0,champ=0;
   GK.forEach(g=>{
-    GAMES[g].forEach(fx=>{
-      if(!played(fx))return;decided++;
-      const aw=winnerOf(fx);const pw=predWinner(p,g,fx[0],fx[1]);
+    GAMES[g].forEach((fx,i)=>{
+      if(!played(fx))return;
+      const pw=entryPick(p,g,i,fx[0],fx[1]);if(pw===null)return; // guest didn't predict this game
+      decided++;
+      const aw=winnerOf(fx);
       if(aw!=="DRAW"&&pw===aw){match+=3;correct++;}
     });
-    if(groupComplete(g)){const fin=standings(g).map(s=>s.t);for(let i=0;i<4;i++)if(p.groups[g][i]===fin[i])posPts+=3;}
+    if(p.groups&&groupComplete(g)){const fin=standings(g).map(s=>s.t);for(let i=0;i<4;i++)if(p.groups[g][i]===fin[i])posPts+=3;}
   });
   const tq=thirdQualifiers();
-  if(tq)p.thirdPlace.forEach(t=>{if(tq.includes(t))third+=4;});
+  if(tq&&p.thirdPlace)p.thirdPlace.forEach(t=>{if(tq.includes(t))third+=4;});
   if(CHAMPION&&p.champion===CHAMPION)champ=25;
   return {match,correct,decided,posPts,third,champ,total:match+posPts+third+champ};
 }
@@ -326,7 +366,7 @@ function renderStatus(){
 
 function renderLeaderboard(){
   const n=gamesPlayed();
-  const rows=ROSTER.map(p=>({p,s:scoreOf(p)})).sort((a,b)=>b.s.total-a.s.total||b.s.correct-a.s.correct||a.p.name.localeCompare(b.p.name));
+  const rows=ENT().map(p=>({p,s:scoreOf(p)})).sort((a,b)=>b.s.total-a.s.total||b.s.correct-a.s.correct||a.p.name.localeCompare(b.p.name));
   const max=Math.max(1,...rows.map(r=>r.s.total));
   document.getElementById('lbSub').textContent=n? `Live — ${n}/72 group games played. Ranked by total points.` : 'No results yet.';
   const wrap=document.getElementById('leaderboard');wrap.innerHTML='';
@@ -335,7 +375,7 @@ function renderLeaderboard(){
     const extra=[s.posPts?`+${s.posPts} table`:'',s.champ?'+25 champ':''].filter(Boolean).join(' · ');
     const row=el(`<div class="lb-row" data-name="${r.p.name}">
       <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
-      <div class="lb-name">${r.p.name}
+      <div class="lb-name">${r.p.name}${r.p.guest?' <span class="chip guest">guest</span>':''}
         <small>${s.correct}/${s.decided} match picks${extra?' · '+extra:''}</small>
         <div class="bar"><i style="width:${Math.round(s.total/max*100)}%"></i></div>
       </div>
@@ -361,11 +401,12 @@ function renderMatches(){
       else h+=`<td class="mini">—</td>`;
     });
     h+=`</tr>`;
-    ROSTER.forEach(p=>{
-      h+=`<tr><td class="who">${p.name}</td>`;
-      fxs.forEach(fx=>{
-        const pw=predWinner(p,g,fx[0],fx[1]);
-        if(!played(fx)){h+=`<td class="miss">${ABBR[pw]}</td>`;}
+    ENT().forEach(p=>{
+      h+=`<tr><td class="who">${p.name}${p.guest?' <span class="chip guest">guest</span>':''}</td>`;
+      fxs.forEach((fx,i)=>{
+        const pw=entryPick(p,g,i,fx[0],fx[1]);
+        if(pw===null){h+=`<td class="mini">—</td>`;}
+        else if(!played(fx)){h+=`<td class="miss">${ABBR[pw]}</td>`;}
         else{const aw=winnerOf(fx);const ok=aw!=="DRAW"&&pw===aw;
           h+=`<td class="${ok?'cellc':'cellw'}">${ABBR[pw]} ${ok?'<span class="ok">✓</span>':'<span style="color:var(--red)">✗</span>'}</td>`;}
       });
@@ -386,7 +427,7 @@ function renderGroups(){
     h+=`<tr class="actualrow"><td class="who">✅ ${complete?'Final':'Live'}</td>`;
     st.forEach(s=>{h+=`<td>${flag(s.t)} ${ABBR[s.t]}<div class="mini">${s.pts}p</div></td>`;});
     h+=`</tr>`;
-    ROSTER.forEach(p=>{
+    ENT().filter(p=>p.groups).forEach(p=>{
       h+=`<tr><td class="who">${p.name}</td>`;
       for(let i=0;i<4;i++){const t=p.groups[g][i];const ok=fin[i]===t&&done>0;
         h+=`<td class="${ok?'cellc':'miss'}">${ABBR[t]} ${ok?'<span class="ok">✓</span>':''}</td>`;}
@@ -398,20 +439,21 @@ function renderGroups(){
 
 function renderChampions(){
   const wrap=document.getElementById('champions');wrap.innerHTML='';
-  ROSTER.forEach(p=>{
+  ENT().forEach(p=>{
     let cls='none',mark='';
     if(p.champion){if(CHAMPION){cls=p.champion===CHAMPION?'correct':'wrong';mark=p.champion===CHAMPION?' ✓':' ✗';}else cls='';}
-    wrap.appendChild(el(`<div class="champ-row"><div class="who">${p.name}</div>
-      <div class="champ-pick ${cls}">${p.champion?flag(p.champion)+' '+p.champion+mark:'no pick (group stage only)'}</div></div>`));
+    wrap.appendChild(el(`<div class="champ-row"><div class="who">${p.name}${p.guest?' <span class="chip guest">guest</span>':''}</div>
+      <div class="champ-pick ${cls}">${p.champion?flag(p.champion)+' '+p.champion+mark:'no pick'}</div></div>`));
   });
   const bw=document.getElementById('brackets');bw.innerHTML='';
-  ROSTER.forEach(p=>{
+  ENT().forEach(p=>{
     const d=el(`<details class="box" data-name="${p.name}"></details>`);
-    let inner=`<summary>${p.name}<span class="chip ${p.knockoutCompleted?'full':'group'}">${p.knockoutCompleted?'Full bracket':'Group only'}</span><span class="caret">▸</span></summary><div class="boxbody">`;
+    const tag=p.guest?'<span class="chip guest">guest</span>':`<span class="chip ${p.knockoutCompleted?'full':'group'}">${p.knockoutCompleted?'Full bracket':'Group only'}</span>`;
+    let inner=`<summary>${p.name}${tag}<span class="caret">▸</span></summary><div class="boxbody">`;
     if(p.r32&&p.r32.length){
       inner+=`<div class="mini" style="margin:4px 0 6px">ROUND OF 32 — winners picked</div>`;
       p.r32.forEach(m=>{inner+=`<div class="match"><span class="dt">M${m[0]}</span><span class="pair">${m[1]} v ${m[2]}</span><span class="sc">${m[3]?ABBR[m[3]]:'—'}</span></div>`;});
-    }else inner+=`<div class="mini" style="padding:6px 0">Knockout bracket not filled in — group stage only.</div>`;
+    }else inner+=`<div class="mini" style="padding:6px 0">${p.guest?'Guest — predicted upcoming match winners + champion.':'Knockout bracket not filled in — group stage only.'}</div>`;
     if(p.champion)inner+=`<div class="match"><span class="dt">🏆</span><span class="pair">Champion</span><span class="sc">${flag(p.champion)} ${p.champion}</span></div>`;
     inner+=`</div>`;d.innerHTML=inner;bw.appendChild(d);
   });
@@ -455,17 +497,86 @@ document.getElementById('resetBtn').addEventListener('click',()=>{if(confirm('Re
 
 function renderLeague(){
   const lab=document.getElementById('leagueLabel');
-  if(ACTIVE)lab.innerHTML=`<span class="lg-name">${ACTIVE.label}</span><span>${ROSTER.length} players</span><a href="./">switch league</a>`;
+  if(ACTIVE)lab.innerHTML=`<span class="lg-name">${ACTIVE.label}</span><span>${ENT().length} players</span><a href="./">switch league</a>`;
 }
 function initChooser(){
   document.getElementById('ch1').textContent=ROSTERS["1"].names.join(' · ');
   document.getElementById('ch2').textContent=ROSTERS["2"].names.join(' · ');
   document.getElementById('chooser').classList.add('show');
 }
-function renderAll(){renderStatus();renderLeaderboard();renderMatches();renderGroups();renderChampions();renderEditor();}
 
-if(ACTIVE){document.title='World Cup 2026 — '+ACTIVE.label;renderLeague();renderAll();}
-else{initChooser();}
+/* ===== Join / Predict (guest entry) ===== */
+let DRAFT={picks:{},champion:""};
+function renderJoin(){
+  if(!ACTIVE)return;
+  document.getElementById('joinTitle').textContent='Join '+ACTIVE.label+' & predict';
+  const wrap=document.getElementById('joinGames');wrap.innerHTML='';
+  let any=false;
+  GK.forEach(g=>{
+    const upcoming=GAMES[g].map((fx,i)=>[fx,i]).filter(([fx])=>!played(fx));
+    if(!upcoming.length)return;any=true;
+    const card=el(`<div class="card"><div class="grp-head"><span class="gname">Group ${g}</span><span class="mini">tap the winner</span></div></div>`);
+    upcoming.forEach(([fx,i])=>{
+      const gi=gidx(g,i);
+      const row=el(`<div class="pick"><span class="dt mini">${fx[2]}</span><div class="opts"></div></div>`);
+      const opts=row.querySelector('.opts');
+      [['A',fx[0]],['B',fx[1]]].forEach(([code,team])=>{
+        const b=el(`<button type="button" class="opt-btn ${DRAFT.picks[gi]===code?'sel':''}">${flag(team)} <span class="nm">${team}</span></button>`);
+        b.addEventListener('click',()=>{
+          if(DRAFT.picks[gi]===code)delete DRAFT.picks[gi];else DRAFT.picks[gi]=code;
+          opts.querySelectorAll('.opt-btn').forEach((x,xi)=>x.classList.toggle('sel',DRAFT.picks[gi]===(xi===0?'A':'B')));
+        });
+        opts.appendChild(b);
+      });
+      card.appendChild(row);
+    });
+    wrap.appendChild(card);
+  });
+  if(!any)wrap.innerHTML=`<div class="card"><p class="sub" style="margin:0">All group matches have been played — no upcoming games left to predict. You can still pick a champion below.</p></div>`;
+  const cs=document.getElementById('joinChampion');
+  cs.innerHTML=`<option value="">— no pick —</option>`+ALL_TEAMS.map(t=>`<option value="${t}" ${DRAFT.champion===t?'selected':''}>${t}</option>`).join('');
+  cs.onchange=()=>{DRAFT.champion=cs.value;};
+}
+function currentGuesser(){
+  const name=document.getElementById('joinName').value.trim();
+  return {name, league:PARAM, guest:true, picks:{...DRAFT.picks}, champion:DRAFT.champion||null};
+}
+document.getElementById('joinSaveBtn').addEventListener('click',()=>{
+  const g=currentGuesser();
+  if(!g.name){document.getElementById('joinNameWarn').style.display='block';return;}
+  document.getElementById('joinNameWarn').style.display='none';
+  upsertGuesser(g);renderAll();toast('✅ You\'re in, '+g.name+'!');switchTab('leaderboard');
+});
+document.getElementById('joinShareBtn').addEventListener('click',async()=>{
+  const g=currentGuesser();
+  if(!g.name){document.getElementById('joinNameWarn').style.display='block';return;}
+  upsertGuesser(g);renderAll();
+  const payload={n:g.name,l:g.league,p:g.picks,c:g.champion};
+  const code=btoa(encodeURIComponent(JSON.stringify(payload)));
+  const link=location.origin+location.pathname+'?g='+PARAM+'#join='+code;
+  try{await navigator.clipboard.writeText(link);toast('🔗 Link copied — send it to the group');}
+  catch(e){prompt('Copy your shareable link:',link);}
+});
+function importFromHash(){
+  if(!location.hash.startsWith('#join='))return;
+  try{
+    const payload=JSON.parse(decodeURIComponent(atob(location.hash.slice(6))));
+    if(payload&&payload.n&&payload.l){
+      upsertGuesser({name:payload.n,league:payload.l,guest:true,picks:payload.p||{},champion:payload.c||null});
+      setTimeout(()=>toast('Added '+payload.n+' to League '+payload.l),300);
+    }
+  }catch(e){}
+  history.replaceState(null,'',location.pathname+location.search);
+}
+
+function renderAll(){renderStatus();renderLeaderboard();renderMatches();renderGroups();renderChampions();renderEditor();renderJoin();}
+
+if(ACTIVE){
+  document.title='World Cup 2026 — '+ACTIVE.label;
+  importFromHash();
+  renderLeague();renderAll();
+  if(new URLSearchParams(location.search).has('guess'))switchTab('join');
+}else{initChooser();}
 </script>
 </body>
 </html>

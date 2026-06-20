@@ -37,6 +37,15 @@ Live links:
 
 The bare URL (no `?g=`) shows a league chooser. Mohsen appears in both.
 
+### Join links (for new guessers)
+
+New people can predict the **upcoming (not-yet-played) matches** + champion and land on the leaderboard:
+
+- Join League 1 → https://makqasabi.github.io/wc2026-predictions/?g=1&guess
+- Join League 2 → https://makqasabi.github.io/wc2026-predictions/?g=2&guess
+
+A guest picks the winners of remaining games (+3 each once played) and a champion (+25). Their picks save on-device and they appear as a **guest** on that league's board. The "Copy my shareable link" button produces a `#join=…` link encoding their picks — when anyone opens it, that guest is added to their board too. (No backend: this is the static-hosting way to let guests join. A live shared board would need a database, e.g. Firebase.)
+
 ## Entrants (all)
 
 Abdulrahman Othman Tariq · Ahmed Esam · Bader · Mohammad Saad · Mohsen · Naser · Othman Tariq · Salman Othman Tariq · Tamim · Tariq Othman Tariq · Thamer
