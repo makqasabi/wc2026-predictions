@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -266,7 +266,7 @@
 
 <script>
 /* ===== i18n ===== */
-const LANG=(new URLSearchParams(location.search).get('lang')==='ar')?'ar':'en';
+const LANG=(new URLSearchParams(location.search).get('lang')==='en')?'en':'ar';
 document.documentElement.lang=LANG;
 document.documentElement.dir=LANG==='ar'?'rtl':'ltr';
 
@@ -427,7 +427,7 @@ document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.get
 
 /* Language toggle */
 (function(){const a=document.getElementById('langToggle');a.textContent=t('langSwitch');
-  const u=new URL(location.href);if(LANG==='ar')u.searchParams.delete('lang');else u.searchParams.set('lang','ar');
+  const u=new URL(location.href);if(LANG==='en')u.searchParams.delete('lang');else u.searchParams.set('lang','en');
   a.href=u.pathname+u.search+u.hash;})();
 
 /* ===== Reference data ===== */
