@@ -160,9 +160,19 @@
 <main>
   <section class="panel active" id="panel-leaderboard">
     <div class="card">
-      <h2>Leaderboard</h2>
+      <h2>🏅 Predictors</h2>
       <p class="sub" id="lbSub"></p>
       <div id="leaderboard"></div>
+    </div>
+    <div class="card">
+      <h2>🎯 Accuracy <span class="mini">· % of decided picks correct</span></h2>
+      <p class="sub" id="accSub"></p>
+      <div id="accBoard"></div>
+    </div>
+    <div class="card" id="joinersCard" style="display:none">
+      <h2>🙋 Joiners <span class="mini">· by accuracy %</span></h2>
+      <p class="sub" id="joinersSub"></p>
+      <div id="joinersBoard"></div>
     </div>
     <div class="card">
       <h2>How scoring works</h2>
@@ -459,6 +469,28 @@ function renderLeaderboard(){
       <div class="lb-score">${s.total}<small>pts</small></div>
     </div>`);
     row.addEventListener('click',()=>{switchTab('champions');const d=document.querySelector(`details.box[data-name="${CSS.escape(r.p.name)}"]`);if(d){d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});}});
+    wrap.appendChild(row);
+  });
+  renderAccuracy();
+}
+function renderAccuracy(){
+  const all=ENT().map(p=>({p,s:scoreOf(p)})).filter(r=>r.s.decided>0);
+  const wrap=document.getElementById('accBoard');wrap.innerHTML='';
+  const sub=document.getElementById('accSub');
+  if(!all.length){sub.textContent='Once games are played and players have made picks, accuracy will show here.';return;}
+  all.forEach(r=>{r.acc=r.s.correct/r.s.decided;});
+  all.sort((a,b)=>b.acc-a.acc||b.s.decided-a.s.decided||a.p.name.localeCompare(b.p.name));
+  sub.textContent=`${all.length} ranked · correct picks ÷ picks on played games`;
+  all.forEach((r,i)=>{
+    const rk=i+1;const pct=Math.round(r.acc*100);
+    const row=el(`<div class="lb-row">
+      <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
+      <div class="lb-name">${r.p.name}${r.p.guest?' <span class="chip guest">joiner</span>':''}
+        <small>${r.s.correct}/${r.s.decided} correct</small>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+      </div>
+      <div class="lb-score">${pct}%<small>acc</small></div>
+    </div>`);
     wrap.appendChild(row);
   });
 }

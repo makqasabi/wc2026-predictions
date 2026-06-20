@@ -5,7 +5,7 @@ A mobile-first web page comparing the FMVA group's **FIFA World Cup 2026 Predict
 
 ## What it does
 
-- **Leaderboard** — ranks all entrants by points, updating live.
+- **Leaderboard** — two boards: **Predictors** (ranked by total points) and **Accuracy** (ranked by % of decided picks correct — fair for late joiners who only predicted some games). Both include the original 11 and any new joiners.
 - **Match Picks** — every group game with its real scoreline, and each person's predicted winner per match (green ✓ correct / red ✗ wrong / grey not yet played). Match picks are derived from each person's group ranking (the higher-ranked team is their predicted winner of that head-to-head).
 - **Group Tables** — live, auto-computed standings (from results) vs each person's predicted finishing order.
 - **Knockouts** — each person's champion pick (turns green/red once decided) and full Round-of-32 bracket.
