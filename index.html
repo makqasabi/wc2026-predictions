@@ -246,6 +246,11 @@
 
   <section class="panel" id="panel-champions">
     <div class="card">
+      <h2 data-i18n="actualKOHeading">🧭 Actual knockout results</h2>
+      <p class="sub" data-i18n="actualKOSub">Teams through each round so far.</p>
+      <div id="koActual"></div>
+    </div>
+    <div class="card">
       <h2 data-i18n="championPicksHeading">Champion picks</h2>
       <p class="sub" data-i18n="championPicksSub">Turns green/red once the actual champion is set.</p>
       <div id="champions"></div>
@@ -374,6 +379,12 @@ const T_EN={
   fairHeading:"⚖️ Level playing field", fairSubtitle:"· same games for everyone",
   fairRanked:n=>`${n} ranked · group games from Jun 20 onward — everyone predicted these exact games`,
   fairEmpty:"The fair race begins with the Jun 20 games. Once those results are in, early and new joiners are ranked on the exact same matches — a true like-for-like comparison.",
+  champPts:"+25 champ",
+  koPts:n=>`+${n} knockouts`,
+  actualKOHeading:"🧭 Actual knockout results",
+  actualKOSub:"Teams through each round so far. You score +3 for each team you tipped to reach the Round of 16, plus a bonus for how far your champion actually goes (QF +6, SF +12, Final +18, Champion +25).",
+  koPending:"The Round of 32 is underway — results will appear here as matches finish.",
+  koChampion:"Champion",
   langSwitch:"عربي"
 };
 
@@ -445,6 +456,12 @@ const T_AR={
   fairHeading:"⚖️ تكافؤ الفرص", fairSubtitle:"· نفس المباريات للجميع",
   fairRanked:n=>`${n} مرتبين · مباريات المجموعات من 20 يونيو فصاعداً — الجميع توقّع هذه المباريات نفسها`,
   fairEmpty:"تبدأ المنافسة العادلة مع مباريات 20 يونيو. عند توفّر نتائجها، يُقارَن المشاركون القدامى والجدد على نفس المباريات تماماً — مقارنة عادلة بالكامل.",
+  champPts:"+25 بطل",
+  koPts:n=>`+${n} أدوار إقصائية`,
+  actualKOHeading:"🧭 نتائج الأدوار الإقصائية الفعلية",
+  actualKOSub:"الفرق المتأهلة في كل دور حتى الآن. تحصل على +3 لكل فريق توقعت تأهله لدور الـ16، مع مكافأة حسب المدى الذي يبلغه بطلك فعلياً (ربع النهائي +6، نصف النهائي +12، النهائي +18، البطل +25).",
+  koPending:"دور الـ32 جارٍ — ستظهر النتائج هنا مع انتهاء المباريات.",
+  koChampion:"البطل",
   langSwitch:"EN"
 };
 const TR=LANG==='ar'?T_AR:T_EN;
@@ -647,8 +664,35 @@ function fairScore(p){
   return {c,d};
 }
 
+/* ===== Actual knockout progression (teams that reached each round). Updated as matches play. ===== */
+const KO_RESULTS={
+  r16:["Canada","Brazil","Germany","Netherlands","Norway","France","Mexico"],
+  qf:[], sf:[], final:[], champion:""
+};
+/* Teams a person predicted to win their Round-of-32 ties (i.e. to reach the R16). */
+function predAdvancers(p){
+  if(p.ko){return [73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88].map(n=>p.ko[n]).filter(Boolean);}
+  if(p.r32&&p.r32.length){return p.r32.map(m=>m[3]).filter(Boolean);}
+  return [];
+}
+/* Knockout points: +3 per predicted advancer that actually reached the R16,
+   plus a champion-run bonus for how far the person's champion actually went. */
+function koScore(p){
+  let r16pts=0;
+  const adv=new Set(predAdvancers(p));
+  KO_RESULTS.r16.forEach(t=>{if(adv.has(t))r16pts+=3;});
+  let cd=0;const c=p.champion;
+  if(c){
+    if(KO_RESULTS.champion===c)cd=25;
+    else if(KO_RESULTS.final.includes(c))cd=18;
+    else if(KO_RESULTS.sf.includes(c))cd=12;
+    else if(KO_RESULTS.qf.includes(c))cd=6;
+  }
+  return {r16pts,cd,total:r16pts+cd};
+}
+
 function scoreOf(p){
-  let match=0,correct=0,decided=0,posPts=0,third=0,champ=0;
+  let match=0,correct=0,decided=0,posPts=0,third=0;
   GK.forEach(g=>{
     GAMES[g].forEach((fx,i)=>{
       if(!played(fx))return;
@@ -661,8 +705,8 @@ function scoreOf(p){
   });
   const tq=thirdQualifiers();
   if(tq&&p.thirdPlace)p.thirdPlace.forEach(t=>{if(tq.includes(t))third+=4;});
-  if(CHAMPION&&p.champion===CHAMPION)champ=25;
-  return {match,correct,decided,posPts,third,champ,total:match+posPts+third+champ};
+  const ko=koScore(p).total;
+  return {match,correct,decided,posPts,third,ko,total:match+posPts+third+ko};
 }
 
 /* ===== Renderers ===== */
@@ -682,7 +726,7 @@ function renderLeaderboard(){
   const wrap=document.getElementById('leaderboard');wrap.innerHTML='';
   rows.forEach((r,i)=>{
     const rk=i+1;const s=r.s;
-    const extra=[s.posPts?t('tablePts',s.posPts):'',s.champ?t('champPts'):''].filter(Boolean).join(' · ');
+    const extra=[s.posPts?t('tablePts',s.posPts):'',s.ko?t('koPts',s.ko):''].filter(Boolean).join(' · ');
     const row=el(`<div class="lb-row" data-name="${r.p.name}">
       <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
       <div class="lb-name">${pn(r.p.name)}${r.p.guest?` <span class="chip joiner">${t('joinerLabel')}</span>`:''}
@@ -951,7 +995,20 @@ document.getElementById('joinSubmitBtn').addEventListener('click',async ev=>{
   finally{btn.disabled=false;btn.textContent=orig;}
 });
 
-function renderAll(){renderStatus();renderLeaderboard();renderMatches();renderGroups();renderChampions();renderEditor();renderJoin();}
+function renderKOActual(){
+  const host=document.getElementById('koActual');if(!host)return;host.innerHTML='';
+  const rounds=[['r16',KO_RESULTS.r16],['qf',KO_RESULTS.qf],['sf',KO_RESULTS.sf],['finalRound',KO_RESULTS.final]];
+  if(!KO_RESULTS.r16.length&&!KO_RESULTS.champion){host.innerHTML=`<p class="sub" style="margin:0">${t('koPending')}</p>`;return;}
+  let h='';
+  rounds.forEach(([key,arr])=>{
+    if(!arr.length)return;
+    h+=`<div style="margin-bottom:10px"><div class="mini" style="margin-bottom:5px">${t(key).toUpperCase()} · ${arr.length}</div><div style="display:flex;flex-wrap:wrap;gap:6px">`+
+      arr.slice().sort((a,b)=>nm(a).localeCompare(nm(b))).map(tm=>`<span class="chip live">${flag(tm)} ${nm(tm)}</span>`).join('')+`</div></div>`;
+  });
+  if(KO_RESULTS.champion)h+=`<div class="champ-celebrate" style="margin-top:6px"><div class="lbl">🏆 ${t('koChampion')}</div><div class="team">${flag(KO_RESULTS.champion)} ${nm(KO_RESULTS.champion)}</div></div>`;
+  host.innerHTML=h;
+}
+function renderAll(){renderStatus();renderLeaderboard();renderMatches();renderGroups();renderKOActual();renderChampions();renderEditor();renderJoin();}
 
 if(ACTIVE){
   renderLeague();renderAll();
