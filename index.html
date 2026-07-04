@@ -387,7 +387,7 @@ const T_EN={
   champPts:"+25 champ",
   koPts:n=>`+${n} knockouts`,
   actualKOHeading:"🧭 Actual knockout results",
-  actualKOSub:"Teams through each round so far. You score +3 for each team you tipped to reach the Round of 16, plus a bonus for how far your champion actually goes (QF +6, SF +12, Final +18, Champion +25).",
+  actualKOSub:"Teams through each round so far. Each team you tipped to reach the Round of 16 keeps earning the further it actually goes — R16 +3, QF +5, SF +8, Final +12, winner +18 — plus +7 if you also named the champion. So the ranking moves every round your picks survive.",
   koPending:"The Round of 32 is underway — results will appear here as matches finish.",
   koChampion:"Champion",
   koGridHeading:"🎯 Knockout picks",
@@ -467,7 +467,7 @@ const T_AR={
   champPts:"+25 بطل",
   koPts:n=>`+${n} أدوار إقصائية`,
   actualKOHeading:"🧭 نتائج الأدوار الإقصائية الفعلية",
-  actualKOSub:"الفرق المتأهلة في كل دور حتى الآن. تحصل على +3 لكل فريق توقعت تأهله لدور الـ16، مع مكافأة حسب المدى الذي يبلغه بطلك فعلياً (ربع النهائي +6، نصف النهائي +12، النهائي +18، البطل +25).",
+  actualKOSub:"الفرق المتأهلة في كل دور حتى الآن. كل فريق توقعت وصوله لدور الـ16 يواصل جمع النقاط كلما تقدّم فعلياً — دور الـ16 +3، ربع النهائي +5، نصف النهائي +8، النهائي +12، البطل +18 — بالإضافة إلى +7 إذا توقعت البطل الصحيح. لذا يتحرّك الترتيب كل جولة يصمد فيها اختيارك.",
   koPending:"دور الـ32 جارٍ — ستظهر النتائج هنا مع انتهاء المباريات.",
   koChampion:"البطل",
   koGridHeading:"🎯 توقعات الأدوار الإقصائية",
@@ -699,20 +699,20 @@ function predAdvancers(p){
   if(p.r32&&p.r32.length){return p.r32.map(m=>m[3]).filter(Boolean);}
   return [];
 }
-/* Knockout points: +3 per predicted advancer that actually reached the R16,
-   plus a champion-run bonus for how far the person's champion actually went. */
+/* Knockout points (survival model): each team you predicted to reach the R16 earns by how far it
+   ACTUALLY went — R16 +3, QF +5, SF +8, Final +12, winner +18 (cumulative, so the ranking moves
+   every round a picked team survives). Plus +7 if you also named the eventual champion. Uniform. */
 function koScore(p){
-  let r16pts=0;
-  const adv=new Set(predAdvancers(p));
-  KO_RESULTS.r16.forEach(t=>{if(adv.has(t))r16pts+=3;});
-  let cd=0;const c=p.champion;
-  if(c){
-    if(KO_RESULTS.champion===c)cd=25;
-    else if(KO_RESULTS.final.includes(c))cd=18;
-    else if(KO_RESULTS.sf.includes(c))cd=12;
-    else if(KO_RESULTS.qf.includes(c))cd=6;
-  }
-  return {r16pts,cd,total:r16pts+cd};
+  let pts=0;
+  advSet(p).forEach(team=>{
+    if(KO_RESULTS.champion===team)pts+=18;
+    else if(KO_RESULTS.final.includes(team))pts+=12;
+    else if(KO_RESULTS.sf.includes(team))pts+=8;
+    else if(KO_RESULTS.qf.includes(team))pts+=5;
+    else if(KO_RESULTS.r16.includes(team))pts+=3;
+  });
+  if(p.champion&&KO_RESULTS.champion===p.champion)pts+=7;
+  return {total:pts};
 }
 
 function scoreOf(p){
