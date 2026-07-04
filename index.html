@@ -379,7 +379,7 @@ const T_EN={
   groupsComplete:"· complete",
   r32:"Round of 32", r16:"Round of 16", qf:"Quarter-finals", sf:"Semi-finals", finalRound:"Final",
   championLabelKO:"Champion",
-  rankedSummary:n=>`${n} ranked · correct picks ÷ picks on played games`,
+  rankedSummary:n=>`${n} ranked · correct ÷ all decided picks (group + knockout) — a team you backed that lost lowers your %`,
   accEmpty:"Once games are played and players have made picks, accuracy will show here.",
   fairHeading:"⚖️ Level playing field", fairSubtitle:"· same games for everyone",
   fairRanked:n=>`${n} ranked · group games from Jun 20 onward — everyone predicted these exact games`,
@@ -459,7 +459,7 @@ const T_AR={
   groupsComplete:"· مكتمل",
   r32:"دور الـ32", r16:"دور الـ16", qf:"ربع النهائي", sf:"نصف النهائي", finalRound:"النهائي",
   championLabelKO:"البطل",
-  rankedSummary:n=>`${n} مرتبين · التوقعات الصحيحة ÷ التوقعات على المباريات المُلعبة`,
+  rankedSummary:n=>`${n} مرتبين · الصحيحة ÷ كل التوقعات المحسومة (مجموعات + إقصائي) — الفريق الذي اخترته وخسر يخفض نسبتك`,
   accEmpty:"ستظهر الدقة هنا بعد لعب المباريات وإجراء التوقعات.",
   fairHeading:"⚖️ تكافؤ الفرص", fairSubtitle:"· نفس المباريات للجميع",
   fairRanked:n=>`${n} مرتبين · مباريات المجموعات من 20 يونيو فصاعداً — الجميع توقّع هذه المباريات نفسها`,
@@ -786,20 +786,30 @@ function renderFair(){
     wrap.appendChild(row);
   });
 }
+/* Knockout accuracy: over every PLAYED knockout match where the person backed one of the two teams,
+   correct if they backed the team that advanced. Backing the team that lost counts as a miss (denominator). */
+function koAccuracy(p){
+  const adv=advSet(p);let c=0,d=0;
+  [...KO_R32,...KO_R16].forEach(m=>{
+    const w=m[3];if(!w)return;const a=m[1],b=m[2],o=(w===a)?b:a;
+    if(adv.has(w)){c++;d++;}else if(adv.has(o)){d++;}
+  });
+  return {c,d};
+}
 function renderAccuracy(){
-  const all=ENT().map(p=>({p,s:scoreOf(p)})).filter(r=>r.s.decided>0);
+  const all=ENT().map(p=>{const s=scoreOf(p);const k=koAccuracy(p);return {p,c:s.correct+k.c,d:s.decided+k.d};}).filter(r=>r.d>0);
   const wrap=document.getElementById('accBoard');wrap.innerHTML='';
   const sub=document.getElementById('accSub');
   if(!all.length){sub.textContent=t('accEmpty');return;}
-  all.forEach(r=>{r.acc=r.s.correct/r.s.decided;});
-  all.sort((a,b)=>b.acc-a.acc||b.s.decided-a.s.decided||a.p.name.localeCompare(b.p.name));
+  all.forEach(r=>{r.acc=r.c/r.d;});
+  all.sort((a,b)=>b.acc-a.acc||b.d-a.d||a.p.name.localeCompare(b.p.name));
   sub.textContent=t('rankedSummary',all.length);
   all.forEach((r,i)=>{
     const rk=i+1;const pct=Math.round(r.acc*100);
     const row=el(`<div class="lb-row">
       <div class="rank ${rk<=3?'r'+rk:''}">${rk}</div>
       <div class="lb-name">${pn(r.p.name)}${r.p.guest?` <span class="chip joiner">${t('joinerLabel')}</span>`:''}
-        <small>${t('correctLabel',r.s.correct,r.s.decided)}</small>
+        <small>${t('correctLabel',r.c,r.d)}</small>
         <div class="bar"><i style="width:${pct}%"></i></div>
       </div>
       <div class="lb-score">${pct}%<small>${t('acc')}</small></div>
